@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightArm",
-  "occupiedVoxels": 21662,
+  "occupiedVoxels": 21863,
   "colorAtlas": "rightArm-color.png",
   "normalAtlas": "rightArm-normal.png",
   "sideMaterialAtlas": "rightArm-side.png"

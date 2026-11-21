@@ -1,7 +1,7 @@
 import {angleDelta,clamp} from './rig-physics.ts';
 
 export const heldProfiles={
- mallet:{anchorY:-.62,follow:24,maxSpeed:13,stiffness:820,damping:88,aimFrequency:8,torqueFrequency:8,style:'heavy' as const},
+ mallet:{anchorY:-.62,follow:24,maxSpeed:13,stiffness:820,damping:88,aimFrequency:7,torqueFrequency:8,style:'heavy' as const},
  glove:{anchorY:-.28,follow:44,maxSpeed:17,stiffness:900,damping:58,aimFrequency:16,torqueFrequency:13,style:'punch' as const},
 };
 export type HeldId=keyof typeof heldProfiles;
@@ -18,7 +18,7 @@ export class HeldMotion {
  contact(touching:boolean,dt:number){this.separated=touching?0:this.separated+dt;if(this.separated>=.1)this.armed=true;}
  strike(strength:number,direction:readonly number[]){
   if(!this.armed)return false;this.armed=false;this.separated=0;
-  const magnitude=clamp(strength,0,28)*(this.id==='glove'?.22:.13);
+  const magnitude=clamp(strength,0,28)*(this.id==='glove'?.25:.16);
   this.kickX-=direction[0]*magnitude;this.kickY-=direction[1]*magnitude;
   this.spin+=direction[0]*(this.id==='mallet'?2.2:.65);
   if(this.id==='glove')this.squeezeVelocity+=Math.min(4,strength*.22);

@@ -69,3 +69,11 @@ Impact velocity is evaluated around each body's previous world center of mass, i
 Recovery uses a quintic envelope with zero endpoint acceleration. Torso orientation begins before the full-height lift, and brief eligibility flicker retains progress for 160ms. Actual airborne bodies receive no pose force. New hits, held grabs and statuses cancel the rise immediately.
 
 A standing label requires the actual torso height/angle, head height and low speed, not just a completed blend timer. The final upright servo is stronger than passive ragdoll springs so gravity cannot leave the puppet permanently leaning. Low-energy contacts with static support during a recent assisted rise are treated as foot planting rather than new injuries; real falls and moving-tool contacts still interrupt it. This avoids the get-up → minor floor contact → damage → collapse loop.
+
+## Mobile play and camera
+
+Compact layout applies at <=760px or on coarse-pointer screens up to 1024px. The game fills the dynamic viewport, respects safe-area insets and uses a bottom tool dock plus six primary thumb controls. Short landscape screens use a side rail. All toys and More open native modal sheets, suspend pointer interactions and preserve the preceding pause state. Settings persist sound, motion and resolution on the device.
+
+`src/game/camera-framing.ts` defines aspect-preserving framing. Compact gameplay frames a 5.8m minimum span around Wassie instead of fitting the whole desktop chamber. Follow smooths toward the torso after release, freezes during one-finger interactions, and can be offset with two-finger pan. Center/reset/load restore framing. Compact rendering starts at 1x pixel ratio; user graphics preferences override it. This is a pixel-cost reduction, not certified physical-mobile performance.
+
+Touch prop placement commits on release only when travel is <=14px. A second pointer cancels the pending placement and any active spring, then starts pan/pinch. Remaining fingers stay in gesture mode until all lift, avoiding ghost taps. Cancellation, visibility loss, orientation/layout changes and modal sheets release constraints and captures. Touch grabbing has a small screen-space fallback around the body bounds; mouse ray selection is unchanged.

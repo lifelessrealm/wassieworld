@@ -13,9 +13,13 @@ npm run dev
 
 Open the local URL printed by Vite. Select the **mallet or glove**, then hold and drag inside the chamber to swing or punch. Release to put it away. Other items are placed with a click. Use **Grab** to drag a body part or loose prop. Release while moving to throw. Touch input is supported.
 
+**On a phone:** one finger grabs or swings; tap to place other toys. Swipe the dock or open **All toys**. Two fingers zoom/pan, **Center** brings Wassie back, and **More** holds save/load, delete and gravity controls. Portrait and landscape fill the viewport.
+
 **G** grab · **1–0** tools · **Space** pause · **T** slow motion · **R** reset Wassie · **Shift+R** clear room · **L** laboratory · **Esc** release · scroll to zoom.
 
 ## Implemented
+
+- Mobile-focused centered camera, portrait dock/landscape tool rail, thumb-sized primary controls, native sheets, pinch zoom/pan, tap-vs-gesture arbitration and persisted sound/motion/graphics preferences. Physical-device performance remains to be verified.
 
 - Six-body articulated Wassie with limited joints, passive inertia-scaled settling, CCD, fixed 120 Hz physics, a damped spring grab and support-aware recovery that respects platforms and airborne motion. A staged quintic torso-led get-up lets the head and limbs follow through the joints.
 - Ten functional tools: mallet, glove, anvil, crate, bomb, rocket, launch pad, fan, cryo capsule, Tesla coil. Cursor-held mallet/glove with distinct weighted/snappy handle springs, contact recoil, glove compression, separation-based strikes, contact-anchored feedback, winces and procedural knock/pop/whoosh sounds. Wider 5.6m bomb blasts with falloff, shockwaves, fireballs and synthesized rumble; chain reactions, fields and freeze/electric combinations.

@@ -53,3 +53,7 @@ Front-facing artwork remains reference-aligned. At oblique angles, painted silho
 Row contours use a wider triangular smoothing window to reduce horizontal lighting bands. Rear cranium and shoulder masses are authored separately from the source facial relief. The head and torso reserve room inside their atlas bounds for displacement: the former envelope exceeded the head bounds and was clipped to a flat rear cap. Regression tests now check all six envelopes for clipping and retain headroom behind the cranium.
 
 Arm envelopes now follow both the front and back torso surface, with a small outer bulge. Their posterior material and inner seam keep them legible from behind without copying front arm ink. Heel depth reaches toward the back of the body, giving the side stance a fuller base. Original X/Y crops, facial landmarks and the unmodified canonical image remain the source of the front view.
+
+## Oblique and compact-view polish
+
+Original silhouette ink now fades gradually toward its side material as the camera leaves the front, reducing stretched dark seams at quarter angles. Posterior arm bulges taper at the shoulder/hand ends rather than ending in flat strips. The unchanged source front remains gated by the existing comparison. Compact camera framing shows the same source volumes and reaction surfaces at a larger useful screen size; it does not swap in a flatter mobile character.

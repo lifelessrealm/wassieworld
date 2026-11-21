@@ -56,7 +56,7 @@ function getProfile(key:keyof typeof canonicalData){
    const tx=Math.max(0,Math.min(torso.width-1,Math.floor((sx-body.crop[0])/(body.crop[2]-body.crop[0])*torso.width))),ty=Math.max(0,Math.min(torso.height-1,Math.floor((sy-body.crop[1])/(body.crop[3]-body.crop[1])*torso.height)));
    const skin=torso.front[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset);
    front[i]=skin+.012+.035*round;
-   back[i]=torso.back[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset)-.012-.035*round;
+   back[i]=torso.back[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset)-.012-.045*Math.sin(Math.PI*v)**.45*round;
   }
  }
  const at=(data:Float32Array,x:number,y:number)=>data[Math.max(0,Math.min(d.height-1,y))*d.width+Math.max(0,Math.min(d.width-1,x))];

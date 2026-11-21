@@ -1,6 +1,6 @@
 # Implementation status — 2026-11-21
 
-The playable foundation now has a nape/flank/heel anatomy, differentiated cursor strikes and recovery refinement pass. The existing ten-tool catalog is unchanged. It is not the completed master-plan release.
+Mobile play is now the main product focus: centered subject framing, viewport-filling portrait/landscape layouts, thumb controls, pinch/pan and native tool/action sheets. Character and strike refinement continues within that flow. The existing ten-tool catalog is unchanged. It is not the completed master-plan release.
 
 | Area | Status |
 | --- | --- |
@@ -11,6 +11,7 @@ The playable foundation now has a nape/flank/heel anatomy, differentiated cursor
 | Six-body articulated rig, CCD, fixed step, mouse/touch grab and throw | Passive joint settling; staged quintic torso-led recovery on actual support, brief eligibility grace; bounded grabs and differentiated cursor swings. |
 | Cartoon damage, freeze/electric combination, auto recovery | Contact-point and mass-sensitive impacts, per-part/per-surface marks, continuous directional recoil, surface frost/soot/shock, depth-aware stars and bandages. Full expression library planned. |
 | Testing chamber and ten functional tools | Weightier mallet follow-through, quicker glove rebound/compression, one hit per continuous contact, actual-contact bursts/winces and differentiated procedural audio. Existing blast and other tools retained. |
+| Mobile layout and touch flow | Viewport-filling centered play, bottom dock/landscape rail, 44px primary targets, All toys/More sheets, pinch/pan, touch placement arbitration, orientation cleanup, persisted preferences. Physical phone verification remains open. |
 | Scoring, catalog search/categories, pause/time/gravity/reset/delete | Implemented |
 | Local prop setup save/load, PNG screenshot export | Implemented |
 | Synthesized effects and motion/resolution controls | Implemented first pass; music/voice and full mixing planned |
@@ -25,7 +26,7 @@ The playable foundation now has a nape/flank/heel anatomy, differentiated cursor
 
 ## Next quality gates
 
-1. Review the authored side/rear interpretation against the supplied front drawing. Refine neck transitions and animation poses before final all-angle approval and content expansion.
+1. Prioritize physical-phone play tests, Safari/Android behavior, low-end GPU profiling and touch-camera feedback before more tools. Review the authored side/rear interpretation against the supplied front drawing. Refine neck transitions and animation poses before final all-angle approval and content expansion.
 2. Add greedy surface meshing/LOD, profile actual desktop and mobile GPUs, and measure many-prop loading/memory. Current 40-prop / 100-particle caps remain enforced.
 3. Gather play feedback on weight, passive joint lag, contact-point reactions and supported recovery. Automated platform, airborne, repeated-hit, mass-response and zero-gravity regressions pass.
 4. Add per-material shading, shadow proxies and a richer lighting inspection rig. Expand original audio and persist accessibility preferences.
