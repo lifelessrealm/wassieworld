@@ -20,22 +20,52 @@ export const volumes: Record<string, Volume> = {
   tesla: volume('tesla',[.84,1.4,.84],[b([0,-.57,0],[.39,.1,.39],'#384c49'),b([0,-.05,0],[.15,.46,.15],'#ab7e52'),...[-.3,-.1,.1,.3].map(y=>e([0,y,0],[.25,.045,.25],steel)),e([0,.49,0],[.36,.18,.36],'#a2c9c4')])
 };
 // All six profiles retain the same source-pixel/world ratio and joint space.
-for(const p of characterParts){const [l,t,r,b]=p.crop;volumes[p.asset]={...volume(p.asset,[(r-l)*SOURCE_SCALE,(b-t)*SOURCE_SCALE,p.depth],[],p.layers,canonicalData[p.id].width),depthResolution:16,reference:p.id};}
-const profiles=new Map<string,{width:number;height:number;bytes:Uint8Array;distance:Uint8Array;colors:string[]}>();
+for(const p of characterParts){const [l,t,r,b]=p.crop;volumes[p.asset]={...volume(p.asset,[(r-l)*SOURCE_SCALE,(b-t)*SOURCE_SCALE,p.depth],[],p.layers,canonicalData[p.id].width),depthResolution:32,reference:p.id};}
+type Profile={width:number;height:number;bytes:Uint8Array;distance:Uint8Array;colors:string[];front:Float32Array;back:Float32Array;frontNormals:Float32Array;backNormals:Float32Array};
+const profiles=new Map<string,Profile>();
+const headRelief=characterParts.find(part=>part.id==='head')!.relief;
 function getProfile(key:keyof typeof canonicalData){
  let p=profiles.get(key);if(p)return p;const d=canonicalData[key],bytes=Uint8Array.from(atob(d.pixels),c=>c.charCodeAt(0)),distance=Uint8Array.from(atob(d.distance),c=>c.charCodeAt(0));
  const colors=Array.from({length:d.width*d.height},(_,i)=>'#'+[...bytes.slice(i*4,i*4+3)].map(v=>v.toString(16).padStart(2,'0')).join(''));
- p={width:d.width,height:d.height,bytes,distance,colors};profiles.set(key,p);return p;
+ const spec=characterParts.find(part=>part.id===key)!,size=volumes[spec.asset].size,count=d.width*d.height,front=new Float32Array(count),back=new Float32Array(count),frontNormals=new Float32Array(count*3),backNormals=new Float32Array(count*3);
+ const bounds=Array.from({length:d.height},(_,y)=>{let l=d.width,r=0;for(let x=0;x<d.width;x++)if(bytes[(y*d.width+x)*4+3]){l=Math.min(l,x);r=Math.max(r,x);}return [l,r];});
+ const bump=(u:number,v:number,cx:number,cy:number,rx:number,ry:number)=>Math.exp(-2*(((u-cx)/rx)**2+((v-cy)/ry)**2));
+ const dome=(u:number,v:number,cx:number,cy:number,rx:number,ry:number)=>Math.sqrt(Math.max(0,1-((u-cx)/rx)**2-((v-cy)/ry)**2));
+ for(let y=0;y<d.height;y++)for(let x=0;x<d.width;x++){
+  const i=y*d.width+x,u=(x+.5)/d.width,v=(y+.5)/d.height;
+  let l=0,r=0,total=0;for(let row=Math.max(0,y-3);row<=Math.min(d.height-1,y+3);row++){if(bounds[row][0]>bounds[row][1])continue;const weight=4-Math.abs(row-y);l+=bounds[row][0]*weight;r+=bounds[row][1]*weight;total+=weight;}l/=total||1;r/=total||1;
+  const t=(x-(l+r)/2)/Math.max(1,(r-l)/2);
+  const round=Math.sqrt(Math.max(0,1-t*t));
+  const endTaper=key==='head'?(.2+.8*Math.sqrt(Math.max(0,1-((v-.48)/.54)**2))):key.includes('Foot')?(.64+.36*Math.sin(Math.PI*v)):(.45+.55*Math.sin(Math.PI*v)**.35);
+  const relief=key==='head'?Math.max(dome(u,v,.49,.416,.177,.168),dome(u,v,.814,.416,.143,.16),dome(u,v,.62,.82,.37,.065)*.65):bump(u,v,.52,.55,.4,.55)*.5;
+  front[i]=size[2]/2-spec.relief+spec.relief*relief-.012*(1-Math.min(1,distance[i]/3));
+  back[i]=size[2]/2-spec.relief-(size[2]-spec.relief)*endTaper*(.12+.88*round);
+ }
+ const at=(data:Float32Array,x:number,y:number)=>data[Math.max(0,Math.min(d.height-1,y))*d.width+Math.max(0,Math.min(d.width-1,x))];
+ for(let y=0;y<d.height;y++)for(let x=0;x<d.width;x++)for(const [field,normals,sign]of [[front,frontNormals,1],[back,backNormals,-1]] as const){
+  const nx=-(at(field,x+1,y)-at(field,x-1,y))/(2*size[0]/d.width)*sign,ny=(at(field,x,y+1)-at(field,x,y-1))/(2*size[1]/d.height)*sign,nz=sign,length=Math.hypot(nx,ny,nz);
+  normals.set([nx/length,ny/length,nz/length],(y*d.width+x)*3);
+ }
+ p={width:d.width,height:d.height,bytes,distance,colors,front,back,frontNormals,backNormals};profiles.set(key,p);return p;
 }
+/** Exposes the coherent front/back envelope for collider/decal QA, in local volume space. */
+export function characterEnvelope(asset:string,u:number,v:number){const volume=volumes[asset];if(!volume?.reference)return null;const p=getProfile(volume.reference),x=Math.max(0,Math.min(p.width-1,Math.floor(u*p.width))),y=Math.max(0,Math.min(p.height-1,Math.floor(v*p.height))),i=y*p.width+x;if(!p.bytes[i*4+3])return null;return {front:p.front[i],back:p.back[i]};}
 function referenceSample(v:Volume,point:Vec):{color:string;normal:Vec}|null{
  const p=getProfile(v.reference!),x=Math.floor((point[0]/v.size[0]+.5)*p.width),y=Math.floor((.5-point[1]/v.size[1])*p.height);
  if(x<0||x>=p.width||y<0||y>=p.height)return null;const i=(y*p.width+x)*4;if(!p.bytes[i+3])return null;
- const depthAt=(px:number,py:number)=>{if(px<0||py<0||px>=p.width||py>=p.height)return v.size[2]/2-.025;const distance=p.distance[py*p.width+px];return v.size[2]/2-.025*(1-Math.min(1,distance/3));};
- const depth=depthAt(x,y);if(Math.abs(point[2])>depth)return null;
- const nx=-(depthAt(x+1,y)-depthAt(x-1,y))/(2*v.size[0]/p.width),ny=(depthAt(x,y+1)-depthAt(x,y-1))/(2*v.size[1]/p.height),nz=Math.sign(point[2])||1;
- const n:Vec=[nx,ny,nz];const length=Math.hypot(...n);const painted=point[2]>depth-v.size[2]/(v.depthResolution??v.resolution)*1.1;
- const color=painted?p.colors[y*p.width+x]:green;
- return {color,normal:n.map(x=>x/length) as Vec};
+ const cell=y*p.width+x,front=p.front[cell],back=p.back[cell];if(point[2]>front||point[2]<back)return null;
+ const isFront=front-point[2]<point[2]-back,normals=isFront?p.frontNormals:p.backNormals,n=cell*3;
+ const painted=point[2]>front-v.size[2]/(v.depthResolution??v.resolution)*1.1;
+ let color=painted?p.colors[cell]:green;
+ if(!painted&&v.id==='head'){
+  const u=(x+.5)/p.width,t=(y+.5)/p.height,base=v.size[2]/2-headRelief;
+  const eye=Math.min(((u-.49)/.177)**2+((t-.416)/.168)**2,((u-.814)/.143)**2+((t-.416)/.16)**2);
+  if(eye<1&&point[2]>base+.025)color='#f6f4e9';
+  if(((u-.62)/.37)**2+((t-.82)/.065)**2<1&&point[2]>base+.02)color='#ad6a54';
+ }
+ if(!painted&&v.id.toLowerCase().includes('foot'))color=p.distance[cell]<2?'#233124':'#efefdf';
+ if(!painted&&v.id==='head'){const u=(x+.5)/p.width,t=(y+.5)/p.height;if(Math.abs(t-(.23+.1*(u-.5)**2))<.007&&u>.18&&u<.82)color='#496e32';}
+ return {color,normal:[normals[n],normals[n+1],normals[n+2]]};
 }
 
 export function distance(p: Vec, part: Primitive): number {

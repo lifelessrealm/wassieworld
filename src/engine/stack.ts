@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {compileVolume,volumes} from '../assets/volumes.ts';
-import {characterFront} from '../assets/character.ts';
+import {characterDepthOffset} from '../assets/character.ts';
 type Cached={geometry:T.BufferGeometry;material:T.MeshStandardMaterial;ends:number[]};
 const cache=new Map<string,Cached>();
 export function createStack(id:string):T.InstancedMesh {
@@ -29,18 +29,19 @@ export function createStack(id:string):T.InstancedMesh {
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeBoundingSphere();
   const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.9,metalness:v.reference?0:.025,toneMapped:!v.reference});
   material.onBeforeCompile=shader=>{
-   shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`${v.reference?'outgoingLight = mix(diffuseColor.rgb, min(outgoingLight, diffuseColor.rgb * 1.4), 0.25);':''}
+   if(v.reference){shader.vertexShader='varying float frontness;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n frontness=step(0.0,normal.z);');shader.fragmentShader='varying float frontness;\n'+shader.fragmentShader;}
+   shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`${v.reference?'vec3 stableFront=mix(diffuseColor.rgb,clamp(outgoingLight,diffuseColor.rgb*.96,diffuseColor.rgb*1.35),.2);vec3 sculptedBack=mix(diffuseColor.rgb*.55,min(outgoingLight,diffuseColor.rgb*1.7),.65);outgoingLight=mix(sculptedBack,stableFront,frontness);':''}
     float rim = abs(dot(normalize(vViewPosition), normal));
-    outgoingLight *= smoothstep(0.06, 0.25, rim) * 0.68 + 0.32;
+    ${v.reference?'outgoingLight=mix(vec3(.008,.016,.009),outgoingLight,mix(smoothstep(.09,.3,rim),1.,frontness));':'outgoingLight *= smoothstep(0.06, 0.25, rim) * 0.68 + 0.32;'}
     #include <opaque_fragment>`);
   };
-  material.customProgramCacheKey=()=>`wassie-extruded-slice-v4-${!!v.reference}`;
+  material.customProgramCacheKey=()=>`wassie-extruded-slice-v5-${!!v.reference}`;
   c={geometry,material,ends};cache.set(id,c);
  }
  // Reuse the same GPU geometry for repeated props. Set each inspection range
  // immediately before its draw, so partial laboratory slices remain independent.
  const mesh=new T.InstancedMesh(c.geometry,c.material,1);mesh.setMatrixAt(0,new T.Matrix4());mesh.computeBoundingSphere();mesh.userData.asset=id;mesh.userData.sliceEnds=c.ends;
- if(volumes[id].reference)mesh.position.z=characterFront(id)-volumes[id].size[2]/2;
+ if(volumes[id].reference)mesh.position.z=characterDepthOffset(id);
  mesh.onBeforeRender=()=>mesh.geometry.setDrawRange(0,mesh.userData.visibleVertices??Infinity);return mesh;
 }
 export function disposeStackCache(){for(const c of cache.values()){c.geometry.dispose();c.material.dispose();}cache.clear();}

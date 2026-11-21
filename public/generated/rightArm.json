@@ -3,14 +3,14 @@
   "size": [
     0.2222222222222222,
     1.4351851851851851,
-    0.28
+    0.4
   ],
   "layers": 155,
   "resolution": 24,
-  "depthResolution": 16,
+  "depthResolution": 32,
   "tileSize": [
     24,
-    16
+    32
   ],
   "columns": 8,
   "rows": 20,
@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightArm",
-  "occupiedVoxels": 16108,
+  "occupiedVoxels": 21499,
   "colorAtlas": "rightArm-color.png",
   "normalAtlas": "rightArm-normal.png"
 }

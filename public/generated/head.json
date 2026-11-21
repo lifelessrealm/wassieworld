@@ -3,14 +3,14 @@
   "size": [
     1.6759259259259258,
     1.3888888888888888,
-    0.46
+    1.16
   ],
   "layers": 150,
   "resolution": 181,
-  "depthResolution": 16,
+  "depthResolution": 32,
   "tileSize": [
     181,
-    16
+    32
   ],
   "columns": 8,
   "rows": 19,
@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#head",
-  "occupiedVoxels": 349690,
+  "occupiedVoxels": 391663,
   "colorAtlas": "head-color.png",
   "normalAtlas": "head-normal.png"
 }

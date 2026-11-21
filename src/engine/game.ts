@@ -5,7 +5,7 @@ import {volumes,type Vec} from '../assets/volumes.ts';
 import {Sound} from './audio.ts';
 import {characterParts,bindPosition} from '../assets/character.ts';
 import {DamageState} from '../game/damage.ts';
-import {createCharacterOverlay,paintCharacterOverlay,type CharacterOverlay} from './character-effects.ts';
+import {createCharacterOverlay,paintCharacterOverlay,disposeCharacterOverlay,type CharacterOverlay} from './character-effects.ts';
 type Visual={root:T.Group;mesh:T.InstancedMesh;shadow:T.Mesh;overlay?:CharacterOverlay};
 export class Game {
  readonly sim=new Simulation();readonly scene=new T.Scene();readonly camera=new T.OrthographicCamera();readonly renderer:T.WebGLRenderer;
@@ -62,10 +62,10 @@ export class Game {
   const root=new T.Group(),mesh=createStack(e.asset);mesh.userData.entity=e.id;root.add(mesh);this.scene.add(root);
   const shadow=new T.Mesh(new T.CircleGeometry(1,32),new T.MeshBasicMaterial({color:'#173126',transparent:true,opacity:.2,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.035;this.scene.add(shadow);
   const v:Visual={root,mesh,shadow};
-  v.overlay=createCharacterOverlay(e.asset);if(v.overlay)root.add(v.overlay.mesh);
+  v.overlay=createCharacterOverlay(e.asset);if(v.overlay)root.add(v.overlay.mesh,v.overlay.effects);
   this.visuals.set(e.id,v);return v;
  }
- private disposeOverlay(overlay?:CharacterOverlay){if(!overlay)return;overlay.mesh.geometry.dispose();(overlay.mesh.material as T.Material).dispose();overlay.texture.dispose();}
+ private disposeOverlay(overlay?:CharacterOverlay){disposeCharacterOverlay(overlay);}
  private effect(e:GameEvent){this.sound.play(e.type,e.strength);this.shake=this.reducedMotion?0:Math.min(.1,e.strength*.004);if(!this.reducedMotion&&e.type==='impact'&&e.strength>8)this.hitStop=Math.min(.045,e.strength*.002);if(e.points)this.onNotice(`${e.type==='blast'?'UNSCHEDULED DISASSEMBLY':e.type==='freeze'?'BRAIN FREEZE':e.type==='shock'?'SHOCKING DEVELOPMENT':e.type==='launch'?'SPACE PROGRAM':'MINOR INCONVENIENCE'}  +${e.points}`);
   const count=this.reducedMotion?3:Math.min(20,Math.ceil(e.strength));for(let i=0;i<count&&this.particles.length<100;i++){const mesh=new T.Mesh(new T.BoxGeometry(.055,.055,.055),new T.MeshBasicMaterial({color:e.type==='blast'?'#efbb69':e.type==='freeze'?'#a4e4eb':'#d7e887'}));mesh.position.set(...e.position);this.scene.add(mesh);const angle=i*2.39996;this.particles.push({mesh,velocity:new T.Vector3(Math.cos(angle)*2,Math.sin(angle)*2+2,.7),life:.7});}this.onChange();
  }
@@ -76,14 +76,14 @@ export class Game {
   const alpha=this.paused||this.lab?1:this.accumulator/STEP;
   const active=new Set(this.sim.entities.map(e=>e.id));for(const [id,v]of this.visuals)if(!active.has(id)){this.scene.remove(v.root,v.shadow);v.shadow.geometry.dispose();(v.shadow.material as T.Material).dispose();this.disposeOverlay(v.overlay);v.mesh.dispose();this.visuals.delete(id);}
   const torso=this.sim.entities.find(e=>e.rigPart==='torso')!.body.translation(),squash=this.sim.damage.deformation;
-  const deform=new T.Matrix4().makeTranslation(torso.x,torso.y,0).multiply(new T.Matrix4().makeScale(squash.x,squash.y,1)).multiply(new T.Matrix4().makeTranslation(-torso.x,-torso.y,0));
+  const deform=new T.Matrix4().makeTranslation(torso.x,torso.y,0).multiply(new T.Matrix4().makeRotationZ(squash.angle)).multiply(new T.Matrix4().makeScale(squash.x,squash.y,1)).multiply(new T.Matrix4().makeRotationZ(-squash.angle)).multiply(new T.Matrix4().makeTranslation(-torso.x,-torso.y,0));
   for(const e of this.sim.entities){
    const v=this.visuals.get(e.id)??this.visual(e),p=e.body.translation(),q=e.body.rotation();v.root.position.set(e.previous.x+(p.x-e.previous.x)*alpha,e.previous.y+(p.y-e.previous.y)*alpha,0);v.root.quaternion.copy(e.previousRotation as T.Quaternion).slerp(new T.Quaternion(q.x,q.y,q.z,q.w),alpha);v.root.matrixAutoUpdate=false;v.root.matrix.compose(v.root.position,v.root.quaternion,new T.Vector3(1,1,1));if(e.part)v.root.matrix.premultiply(deform);v.root.matrixWorldNeedsUpdate=true;
    v.root.visible=!this.lab;v.shadow.visible=!this.lab;v.shadow.position.x=p.x;v.shadow.scale.setScalar(Math.max(.2,volumes[e.asset].size[0]*.7));(v.shadow.material as T.MeshBasicMaterial).opacity=Math.max(.035,.22-p.y*.022);if(v.overlay)paintCharacterOverlay(v.overlay,this.sim.damage,this.sim.elapsed);
   }
   const effectsDt=this.paused||this.lab||stopped?0:dt*this.timeScale;
   for(const p of [...this.particles]){p.life-=effectsDt;p.mesh.position.addScaledVector(p.velocity,effectsDt);p.velocity.y-=effectsDt*6;p.mesh.scale.setScalar(Math.max(0,p.life));if(p.life<=0){this.scene.remove(p.mesh);p.mesh.geometry.dispose();(p.mesh.material as T.Material).dispose();this.particles.splice(this.particles.indexOf(p),1);}}
-  if(this.labRoot){this.labDamage.tick(dt);if(this.labTurntable)this.labRoot.rotation.y+=dt*.25;for(const overlay of this.labOverlays)paintCharacterOverlay(overlay,this.labDamage,now/1000);}
+  if(this.labRoot){this.labDamage.tick(dt);if(this.labTurntable)this.labRoot.rotation.y+=dt*.25;for(const overlay of this.labOverlays)paintCharacterOverlay(overlay,this.labDamage,now/1000);const d=this.labDamage.deformation,p=bindPosition(characterParts[0]);const deformation=new T.Matrix4().makeTranslation(...p).multiply(new T.Matrix4().makeRotationZ(d.angle)).multiply(new T.Matrix4().makeScale(d.x,d.y,1)).multiply(new T.Matrix4().makeRotationZ(-d.angle)).multiply(new T.Matrix4().makeTranslation(-p[0],-p[1],0));this.labRoot.matrixAutoUpdate=false;this.labRoot.matrix.compose(this.labRoot.position,this.labRoot.quaternion,new T.Vector3(1,1,1)).multiply(deformation);this.labRoot.matrixWorldNeedsUpdate=true;}
   this.shake*=Math.exp(-dt*18);this.camera.setViewOffset(this.host.clientWidth,this.host.clientHeight,Math.sin(now*.08)*this.shake*35,Math.cos(now*.09)*this.shake*25,this.host.clientWidth,this.host.clientHeight);
   this.renderer.render(this.scene,this.camera);
  }
@@ -91,12 +91,12 @@ export class Game {
   this.lab=enabled;this.labAsset=asset;this.labDamage.reset();this.labTurntable=false;
   this.host.classList.toggle('studio',enabled);for(const object of this.scene.children)if(object.userData.environment)object.visible=!enabled;
   if(this.labBackdrop){this.scene.remove(this.labBackdrop);this.labBackdrop.geometry.dispose();(this.labBackdrop.material as T.Material).dispose();this.labBackdrop=undefined;}
-  if(this.labRoot){this.scene.remove(this.labRoot);this.labRoot.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});for(const overlay of this.labOverlays)this.disposeOverlay(overlay);this.labOverlays=[];this.labRoot=undefined;this.labMesh=undefined;}
+  if(this.labRoot){this.scene.remove(this.labRoot);this.labRoot.traverse(o=>{if(o instanceof T.InstancedMesh&&!o.userData.damageOverlay)o.dispose();});for(const overlay of this.labOverlays)this.disposeOverlay(overlay);this.labOverlays=[];this.labRoot=undefined;this.labMesh=undefined;}
   if(enabled){
    const root=new T.Group();this.labRoot=root;root.position.z=4;
    const backdrop=new T.Mesh(new T.PlaneGeometry(80,80),new T.MeshBasicMaterial({color:'#dfe5d4',toneMapped:false}));backdrop.position.set(0,2,2.5);this.scene.add(backdrop);this.labBackdrop=backdrop;
-   if(asset==='character'){for(const part of characterParts){const group=new T.Group();group.position.set(...bindPosition(part));group.add(createStack(part.asset));const overlay=createCharacterOverlay(part.asset);if(overlay){group.add(overlay.mesh);this.labOverlays.push(overlay);}root.add(group);}}
-   else {const mesh=createStack(asset);this.labMesh=mesh;mesh.position.y=1.8;root.add(mesh);const overlay=createCharacterOverlay(asset);if(overlay){overlay.mesh.position.y=1.8;root.add(overlay.mesh);this.labOverlays.push(overlay);}}
+   if(asset==='character'){for(const part of characterParts){const group=new T.Group();group.position.set(...bindPosition(part));group.add(createStack(part.asset));const overlay=createCharacterOverlay(part.asset);if(overlay){group.add(overlay.mesh,overlay.effects);this.labOverlays.push(overlay);}root.add(group);}}
+   else {const mesh=createStack(asset);this.labMesh=mesh;mesh.position.y=1.8;root.add(mesh);const overlay=createCharacterOverlay(asset);if(overlay){overlay.mesh.position.y=1.8;overlay.effects.position.y=1.8;root.add(overlay.mesh,overlay.effects);this.labOverlays.push(overlay);}}
    this.scene.add(root);this.camera.position.set(0,1.8,19);this.camera.lookAt(0,1.8,0);this.camera.zoom=this.host.clientWidth<600?1.2:2;
   }else {this.camera.position.set(2.4,7.5,19);this.camera.lookAt(0,2.5,0);this.camera.zoom=1;}
   this.camera.updateProjectionMatrix();this.sim.release();this.onChange();
@@ -108,8 +108,10 @@ export class Game {
   if(preset==='frozen'||preset==='combined')d.add('frozen',5);
   if(preset==='shocked'||preset==='combined'){d.add('shocked',4);d.add('soot',6);}
   if(preset==='recovering'){d.hit(20);d.quiet=6;d.add('bandaged',5);}
+  if(preset==='side'){d.hit(17,{region:'head',u:.55,v:.6,surface:'left',normal:[-1,0]});d.hit(14,{region:'torso',u:.5,v:.5,surface:'left',normal:[-1,0]});}
+  if(preset==='rear'){d.hit(17,{region:'head',u:.5,v:.6,surface:'back'});d.hit(14,{region:'torso',u:.55,v:.5,surface:'back'});}
  }
- setSliceCount(count:number){if(this.labMesh){const ends=this.labMesh.userData.sliceEnds as number[];this.labMesh.userData.visibleVertices=ends[Math.max(0,Math.min(ends.length-1,count-1))];}}
+ setSliceCount(count:number){if(this.labMesh){const ends=this.labMesh.userData.sliceEnds as number[];this.labMesh.userData.visibleVertices=ends[Math.max(0,Math.min(ends.length-1,count-1))];for(const overlay of this.labOverlays)overlay.mesh.userData.visibleVertices=this.labMesh.userData.visibleVertices;}}
  setQuality(level:string){this.renderer.setPixelRatio(level==='low'?1:Math.min(devicePixelRatio,level==='ultra'?2:1.5));this.resizeView();}
  resetCamera(){this.camera.zoom=1;this.camera.updateProjectionMatrix();}
  capture(){this.renderer.render(this.scene,this.camera);const a=document.createElement('a');a.download='wassieworld-experiment.png';a.href=this.renderer.domElement.toDataURL('image/png');a.click();}

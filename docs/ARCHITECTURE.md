@@ -10,7 +10,8 @@ Vite and TypeScript provide a static browser app. Three.js owns rendering; Rapie
 - `src/assets/volumes.ts`: coherent 3D source sampling and atlas compilation. Procedural primitives for tools; canonical silhouette/depth fields for character parts.
 - `src/assets/canonical-data.ts`: generated reference profiles. Reproducible from the original image with `scripts/bake-reference.mjs`.
 - `src/assets/character.ts`: one canonical source-pixel/world scale, part crops, rig pivots, masses and joint limits. This prevents mismatched head/body proportions.
-- `src/engine/character-effects.ts`: reference-aligned, silhouette-masked bruises, eyelids, tears, soot, frost and electrical overlays. Uses the same damage state in gameplay and the character studio.
+- `src/engine/character-effects.ts`: geometry-conforming decals, per-surface/per-limb marks, eyelids, tears, soot, frost, electrical effects and volumetric orbiting stars. The gameplay and studio share one damage model.
+- `src/game/rig-physics.ts`: bounded contact-response math and inertia-scaled passive joint springs.
 - `src/engine/stack.ts`: reconstructs aligned slice texels into exposed geometry. Instances and immutable geometry are shared between repeated assets. The laboratory has independent draw ranges.
 - `src/engine/game.ts`: scene, lighting, camera, interpolation, input, presentation, particles and measured renderer statistics.
 - `src/engine/audio.ts`: gesture-unlocked Web Audio with rate-limited original synthesized effects.
@@ -22,11 +23,15 @@ Y is up; Z is depth. Gameplay bodies translate in X/Y and rotate around Z, retai
 
 Six dynamic bodies connect through five revolute joints with authored relative angle limits. The torso locks the overall simulation plane; child joints constrain the remaining bodies. Duplicating those axis locks on the children overconstrained the solver and has been removed. Collision groups prevent self-collision. A damped spring joint links the grabbed local point to a smoothed kinematic cursor, capped at 12 m/s. Releasing deletes the cursor and spring while retaining momentum. Linear and angular speeds are bounded.
 
-Recovery PD impulses blend in over 1.2 seconds after a quiet interval, using a captured recovery anchor rather than chasing the torso and causing idle creep. Held grabs reset the quiet timer continuously. Zero gravity, freezing and electrical reactions disable the floor-pose assist. Reset clears the previous recovery anchor, drag constraint and damage layers.
+Recovery requires measured support, a quiet interval and sufficiently low body speed. Contact manifolds identify the support surface and its height. A brief support grace period handles solver contact flicker; it cannot sustain a pose during an actual flight. The pose controller blends over 1.5 seconds and uses that support height, so standing on a platform does not pull Wassie through it. It captures a new horizontal anchor after a throw, impact or real flight, rather than chasing brief changes in eligibility. Held grabs, zero gravity, freezing and electrical reactions disable floor recovery.
 
-Measured approach speed, contact impulse thresholds and pair cooldowns filter resting noise. Only the strongest contact in a simulation step can trigger a character reaction, followed by a 120 ms global reaction cooldown. Bombs apply radius-weighted impulses and shorten nearby bomb fuses; their six affected rig parts contribute one character damage episode. Rockets apply thrust, then explode. Fields use proximity and reusable impulses; freezing changes damping and electricity reacts with freezing.
+Passive relative joint springs use each part's rotational inertia and apply equal/opposite torques to the torso. They let the head and limbs lag and settle without stiff motors. Recovery angular acceleration is bounded in inertia space, replacing mass-scaled torques that made light limbs too rigid.
 
-Damage recoil follows simulation time with a decaying spring envelope. A shared world deformation transforms the complete rendered puppet, preserving seams during squash. Strong hits add at most 45 ms of hit-stop when reduced motion is off. Particles pause and slow with the simulation. Bruises are bounded and fade, expressions wince briefly, and all layers can recover without replacing the base art.
+Contact-point velocity includes angular motion. Impact strength combines measured contact impulse, incoming speed and reduced mass, so light objects and large constraint-force spikes do not produce disproportionate damage. Local contact positions and normals select the actual struck body part and surface. Only the strongest contact in a step triggers a reaction, with a 120 ms global cooldown. Bombs apply radius-weighted impulses and contribute one character damage episode. The existing rocket, field and elemental behaviors remain available.
+
+Damage recoil is an integrated damped spring. New hits add velocity while keeping the current deformation continuous. Its compression axis follows the contact normal with axis symmetry, so landing does not rotate the squash through a half-turn. A shared transform deforms the complete puppet and preserves seams. Strong hits add at most 45 ms of hit-stop when reduced motion is off; particles follow pause and time scale.
+
+Decals reuse immutable volume geometry, with per-instance shader uniforms and a face texture for eyelids/tears. Front, back, left and right wounds remain distinct. Global frost/soot/shock render over all six parts and orbiting stars have real depth. Removing an overlay disposes its material, texture and instance resources, while preserving the shared source geometry.
 
 ## Save boundary
 

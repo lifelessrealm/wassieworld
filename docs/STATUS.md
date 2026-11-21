@@ -1,15 +1,15 @@
 # Implementation status — 2026-11-21
 
-The initial playable foundation now has a character-focused refinement pass. No tools were added in this pass. It is not the completed game described by the master directive.
+The playable foundation now has a side/rear volume and natural-reaction refinement pass. The existing ten-tool catalog is unchanged. It is not the completed master-plan release.
 
 | Area | Status |
 | --- | --- |
 | TypeScript app, static build, dependency lockfile | Implemented |
 | Coherent source volumes, horizontal atlases, normals, metadata | Implemented first pipeline |
-| Reference fidelity and final hero-art approval | Shared canonical scale, traced arms, planar facial art; neutral front IoU 0.98719. Inferred side/rear and deformation seams still need review. |
-| Character studio | Original-reference comparison, assembled rig, manual views, turntable and layered damage previews implemented. Lighting editor planned. |
-| Six-body articulated rig, CCD, fixed step, mouse/touch grab and throw | Limited revolute joints, damped spring grab, smoothed cursor, bounded velocities and gradual recovery implemented. |
-| Cartoon damage, freeze/electric combination, auto recovery | Local fading marks, impact blink, tears, frost/soot/shock overlays, decaying recoil, seam-preserving squash and deduplicated landing reactions implemented. Full expression library planned. |
+| Reference fidelity and final hero-art approval | Rounded rear envelopes, sculpted eye/lip relief, tapered neck/torso and volumetric feet. Front IoU remains about 0.9873. Inferred side/rear anatomy still requires artistic approval. |
+| Character studio | Front, quarter, left/right, rear, turntable and side/rear damage presets. Geometry-conforming combined effects. Lighting editor planned. |
+| Six-body articulated rig, CCD, fixed step, mouse/touch grab and throw | Passive inertia-scaled joint settling; contact-supported recovery at platform height; bounded spring grab and velocities. |
+| Cartoon damage, freeze/electric combination, auto recovery | Contact-point and mass-sensitive impacts, per-part/per-surface marks, continuous directional recoil, surface frost/soot/shock, depth-aware stars and bandages. Full expression library planned. |
 | Testing chamber and ten functional tools | Implemented first gameplay loop |
 | Scoring, catalog search/categories, pause/time/gravity/reset/delete | Implemented |
 | Local prop setup save/load, PNG screenshot export | Implemented |
@@ -25,9 +25,9 @@ The initial playable foundation now has a character-focused refinement pass. No 
 
 ## Next quality gates
 
-1. Review the new front comparison and animated seam transitions. Author approved rear/side turnarounds and deformation-specific volumes before mass asset production.
+1. Review the authored side/rear interpretation against the supplied front drawing. Refine neck transitions and animation poses before final all-angle approval and content expansion.
 2. Add greedy surface meshing/LOD, profile actual desktop and mobile GPUs, and measure many-prop loading/memory. Current 40-prop / 100-particle caps remain enforced.
-3. Gather play feedback on the new spring grab, limited articulation, landing recoil and recovery. Automated long-grab, torque, zero-gravity and landing regressions now pass.
+3. Gather play feedback on weight, passive joint lag, contact-point reactions and supported recovery. Automated platform, airborne, repeated-hit, mass-response and zero-gravity regressions pass.
 4. Add per-material shading, shadow proxies and a richer lighting inspection rig. Expand original audio and persist accessibility preferences.
 5. Build attachment/construction, reversible editor actions and save versions, then challenges/discoveries/replays. Expand content only after graphics and physics gates pass.
 

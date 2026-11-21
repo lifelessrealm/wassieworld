@@ -3,10 +3,10 @@ type BrowserGame=import('../../src/engine/game.ts').Game;
 const state=<T>(page:Page,fn:(g:BrowserGame)=>T)=>page.evaluate(fn=>{const g=(window as unknown as {__wassie:BrowserGame}).__wassie;return (0,eval)(`(${fn})`)(g);},fn.toString()) as Promise<T>;
 async function ready(page:Page){await page.goto('/');await expect(page.locator('#loading')).toHaveCount(0,{timeout:30000});await expect(page.locator('#tools .tool-card')).toHaveCount(10);}
 test('renders a stable idle subject without scoring or browser errors',async({page})=>{
- const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);
+ const errors:string[]=[],external:string[]=[];page.on('request',r=>{if(new URL(r.url()).hostname!=='127.0.0.1')external.push(r.url());});page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);
  await expect.poll(()=>state(page,g=>g.sim.elapsed)).toBeGreaterThan(2);
  expect(await state(page,g=>g.sim.score.total)).toBe(0);expect(await state(page,g=>g.sim.entities.find(e=>e.asset==='head')!.body.translation().y)).toBeGreaterThan(2.5);
- expect(errors).toEqual([]);await page.screenshot({path:'test-results/chamber-desktop.png',fullPage:true});
+ expect(errors).toEqual([]);expect(external).toEqual([]);await page.screenshot({path:'test-results/chamber-desktop.png',fullPage:true});
 });
 test('pointer placement, search, grabbing, throw, pause and slow motion',async({page})=>{
  await ready(page);await page.getByRole('button',{name:'Select Wooden crate',exact:true}).click();const canvas=page.locator('#game>canvas'),box=(await canvas.boundingBox())!;
@@ -31,6 +31,14 @@ test('character studio compares the original and combines the real damage layers
  await ready(page);await page.locator('#lab').click();await expect(page.locator('#lab-asset')).toHaveValue('character');await expect(page.locator('#reference-card img')).toBeVisible();await expect(page.locator('#slice-control')).toBeHidden();
  await page.locator('#lab-reaction').selectOption('combined');expect(await state(page,g=>g.labDamage.statuses.has('frozen')&&g.labDamage.statuses.has('shocked')&&g.labDamage.statuses.has('soot'))).toBe(true);await page.screenshot({path:'test-results/character-combined.png',fullPage:true});
  await page.locator('#lab-view').selectOption('1.5708');await page.locator('#lab-view').selectOption('turntable');expect(await state(page,g=>g.labTurntable)).toBe(true);await page.locator('#lab-reaction').selectOption('neutral');expect(await state(page,g=>g.labDamage.amount)).toBe(0);await page.locator('#lab-view').selectOption('0');await page.screenshot({path:'test-results/character-front.png',fullPage:true});
+});
+test('side and rear surface reactions render without shader errors or reset resource growth',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);await page.locator('#lab').click();
+ await page.locator('#lab-view').selectOption('1.5708');await page.locator('#lab-reaction').selectOption('side');expect(await state(page,g=>g.labDamage.marks.some(m=>m.surface==='left'))).toBe(true);await page.screenshot({path:'test-results/character-side.png',fullPage:true});
+ await page.locator('#lab-view').selectOption('3.14159');await page.locator('#lab-reaction').selectOption('rear');expect(await state(page,g=>g.labDamage.marks.some(m=>m.surface==='back'))).toBe(true);await page.screenshot({path:'test-results/character-rear.png',fullPage:true});
+ const before=await state(page,g=>g.renderer.info.memory.geometries);
+ for(let i=0;i<5;i++){await page.locator('#sandbox').click();await page.locator('#lab').click();}
+ await expect.poll(()=>state(page,g=>g.renderer.info.memory.geometries)).toBeLessThanOrEqual(before+2);expect(errors).toEqual([]);
 });
 test('touch-sized layout, touch placement and settings remain usable',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const page=await context.newPage();await ready(page);

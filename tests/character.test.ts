@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {PNG} from 'pngjs';
 import {characterParts,bindPosition,SOURCE_SCALE} from '../src/assets/character.ts';
-import {volumes,sample} from '../src/assets/volumes.ts';
+import {volumes,sample,characterEnvelope} from '../src/assets/volumes.ts';
 import {DamageState} from '../src/game/damage.ts';
 import {Simulation,initPhysics,STEP} from '../src/game/simulation.ts';
 before(initPhysics);
@@ -14,7 +14,8 @@ test('canonical eye, lip, brow and crescent landmarks retain the supplied image 
  const png=PNG.sync.read(readFileSync('public/references/wassie-canonical.png'));
  for(const [asset,sx,sy]of [['head',446,730],['head',469,724],['head',500,978],['head',512,590],['torso',402,1258]] as const){
   const p=characterParts.find(p=>p.asset===asset)!,v=volumes[asset],x=((sx-(p.crop[0]+p.crop[2])/2)*SOURCE_SCALE),y=(((p.crop[1]+p.crop[3])/2-sy)*SOURCE_SCALE);
-  const value=sample(v,[x,y,v.size[2]/2-v.size[2]/32]);assert.ok(value,`${asset} landmark ${sx},${sy} must remain occupied`);
+  const envelope=characterEnvelope(asset,x/v.size[0]+.5,.5-y/v.size[1])!;
+  const value=sample(v,[x,y,envelope.front-.00001]);assert.ok(value,`${asset} landmark ${sx},${sy} must remain occupied`);
   const rgb=parseInt(value.color.slice(1),16),actual=[rgb>>16,(rgb>>8)&255,rgb&255],index=(sy*png.width+sx)*4;
   for(let i=0;i<3;i++)assert.ok(Math.abs(actual[i]-png.data[index+i])<24,`${asset} landmark ${sx},${sy}: ${value.color}`);
  }

@@ -3,14 +3,14 @@
   "size": [
     0.7407407407407407,
     0.37037037037037035,
-    0.4
+    0.68
   ],
   "layers": 40,
   "resolution": 80,
-  "depthResolution": 16,
+  "depthResolution": 32,
   "tileSize": [
     80,
-    16
+    32
   ],
   "columns": 8,
   "rows": 5,
@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightFoot",
-  "occupiedVoxels": 27228,
+  "occupiedVoxels": 31622,
   "colorAtlas": "rightFoot-color.png",
   "normalAtlas": "rightFoot-normal.png"
 }
