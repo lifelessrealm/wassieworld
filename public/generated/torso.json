@@ -1,0 +1,24 @@
+{
+  "id": "torso",
+  "size": [
+    1.34,
+    1.86,
+    0.7
+  ],
+  "layers": 80,
+  "resolution": 64,
+  "columns": 8,
+  "rows": 10,
+  "spacing": 0.02325,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#torso",
+  "occupiedVoxels": 202798,
+  "colorAtlas": "torso-color.png",
+  "normalAtlas": "torso-normal.png"
+}

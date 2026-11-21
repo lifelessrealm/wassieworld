@@ -1,0 +1,24 @@
+{
+  "id": "glove",
+  "size": [
+    0.95,
+    1.05,
+    0.8
+  ],
+  "layers": 48,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 6,
+  "spacing": 0.021875000000000002,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#glove",
+  "occupiedVoxels": 50889,
+  "colorAtlas": "glove-color.png",
+  "normalAtlas": "glove-normal.png"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "tesla",
+  "size": [
+    0.84,
+    1.4,
+    0.84
+  ],
+  "layers": 48,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 6,
+  "spacing": 0.029166666666666664,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#tesla",
+  "occupiedVoxels": 34968,
+  "colorAtlas": "tesla-color.png",
+  "normalAtlas": "tesla-normal.png"
+}

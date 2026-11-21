@@ -1,0 +1,24 @@
+{
+  "id": "foot",
+  "size": [
+    0.46,
+    0.38,
+    0.68
+  ],
+  "layers": 24,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 3,
+  "spacing": 0.015833333333333335,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#foot",
+  "occupiedVoxels": 27798,
+  "colorAtlas": "foot-color.png",
+  "normalAtlas": "foot-normal.png"
+}

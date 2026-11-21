@@ -1,0 +1,24 @@
+{
+  "id": "head",
+  "size": [
+    1.58,
+    1.32,
+    1.02
+  ],
+  "layers": 64,
+  "resolution": 64,
+  "columns": 8,
+  "rows": 8,
+  "spacing": 0.020625,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#head",
+  "occupiedVoxels": 158348,
+  "colorAtlas": "head-color.png",
+  "normalAtlas": "head-normal.png"
+}

@@ -1,0 +1,24 @@
+{
+  "id": "mallet",
+  "size": [
+    1.2,
+    1.5,
+    0.65
+  ],
+  "layers": 48,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 6,
+  "spacing": 0.03125,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#mallet",
+  "occupiedVoxels": 39328,
+  "colorAtlas": "mallet-color.png",
+  "normalAtlas": "mallet-normal.png"
+}

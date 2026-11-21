@@ -1,0 +1,24 @@
+{
+  "id": "spring",
+  "size": [
+    1.15,
+    0.64,
+    0.85
+  ],
+  "layers": 32,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 4,
+  "spacing": 0.02,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#spring",
+  "occupiedVoxels": 32148,
+  "colorAtlas": "spring-color.png",
+  "normalAtlas": "spring-normal.png"
+}

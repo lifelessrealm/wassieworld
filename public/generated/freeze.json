@@ -1,0 +1,24 @@
+{
+  "id": "freeze",
+  "size": [
+    0.72,
+    1.1,
+    0.72
+  ],
+  "layers": 48,
+  "resolution": 48,
+  "columns": 8,
+  "rows": 6,
+  "spacing": 0.02291666666666667,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#freeze",
+  "occupiedVoxels": 52376,
+  "colorAtlas": "freeze-color.png",
+  "normalAtlas": "freeze-normal.png"
+}
