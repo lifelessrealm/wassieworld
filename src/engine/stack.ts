@@ -35,7 +35,9 @@ export function createStack(id:string):T.InstancedMesh {
   material.customProgramCacheKey=()=>`wassie-extruded-slice-v3`;
   c={geometry,material,ends};cache.set(id,c);
  }
- // Independent draw ranges for slice inspection; immutable buffers are shared.
- const geometry=new T.BufferGeometry();for(const [name,attribute]of Object.entries(c.geometry.attributes))geometry.setAttribute(name,attribute);geometry.boundingSphere=c.geometry.boundingSphere;
- const mesh=new T.InstancedMesh(geometry,c.material,1);mesh.setMatrixAt(0,new T.Matrix4());mesh.computeBoundingSphere();mesh.userData.asset=id;mesh.userData.sliceEnds=c.ends;return mesh;
+ // Reuse the same GPU geometry for repeated props. Set each inspection range
+ // immediately before its draw, so partial laboratory slices remain independent.
+ const mesh=new T.InstancedMesh(c.geometry,c.material,1);mesh.setMatrixAt(0,new T.Matrix4());mesh.computeBoundingSphere();mesh.userData.asset=id;mesh.userData.sliceEnds=c.ends;
+ mesh.onBeforeRender=()=>mesh.geometry.setDrawRange(0,mesh.userData.visibleVertices??Infinity);return mesh;
 }
+export function disposeStackCache(){for(const c of cache.values()){c.geometry.dispose();c.material.dispose();}cache.clear();}

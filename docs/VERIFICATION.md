@@ -11,7 +11,8 @@ This is a local browser simulation. There is no API/database boundary or secret 
 | `npm test` | 12 passing system tests |
 | `npm run assets` | 15 volume atlases/normal maps and metadata exported; 386 production requirements indexed |
 | `npm run build` | TypeScript and production Vite build passed |
-| `npm run test:e2e` | 5 passing Chrome browser tests, latest run 26.3 s |
+| `node scripts/production-smoke.mjs` | Production browser loaded, ten tools rendered, bomb scored, no debug API and no browser errors |
+| `npm run test:e2e` | 5 passing Chrome browser tests, latest run 25.0 s |
 | Browser startup | No page or console errors in the tested idle flow |
 
 System tests cover changing real cross-sections, occupancy/normals, valid tool registrations, damage decay and effect expiry, bounded repeat scoring, 20 seconds of stable articulated physics, grab/release momentum, bomb force and chain reactions, freeze/electric interactions, fans/launch pads, atomic setup validation, repeated reset resource counts, object limits, and a 30-prop mixed simulation stress case.
@@ -37,7 +38,8 @@ The capped scene retained finite body coordinates. These are short local samples
 
 - Rapier's embedded WASM chunk is ~830 KB gzipped and triggers Vite's uncompressed chunk-size warning. No build errors.
 - Rapier emits an upstream initialization-parameter deprecation warning from its compatibility wrapper; initialization and tested simulation work.
-- Production static output is `dist/`. No production Vercel deployment or external CI run has been claimed.
+- Production static output is `dist/`. No production Vercel deployment has been performed.
+- GitHub Actions run `44931130735` failed before receiving a runner or executing steps. Its annotation is: **“The job was not started because your account is locked due to a billing issue.”** Local validation passed; hosted CI requires the repository owner's GitHub billing issue to be resolved. This is an account-level blocker rather than an observed application test failure.
 - Setup saves store prop placements only, with fresh velocities/fuses and scoring on load.
 - Inferred side/rear character geometry, seams, slice appearance and full material profiles need further art work.
 - No replay, recording, online leaderboard, challenges or bulk-content completion is claimed.

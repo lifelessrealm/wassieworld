@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {createStack} from './stack.ts';
+import {createStack,disposeStackCache} from './stack.ts';
 import {Simulation,STEP,type Entity,type GameEvent} from '../game/simulation.ts';
 import {volumes,type Vec} from '../assets/volumes.ts';
 import {Sound} from './audio.ts';
@@ -89,10 +89,10 @@ export class Game {
   this.renderer.render(this.scene,this.camera);
  }
  setLab(enabled:boolean,asset=this.labAsset){this.lab=enabled;this.labAsset=asset;if(this.labMesh){this.scene.remove(this.labMesh);this.labMesh.dispose();this.labMesh=undefined;}if(enabled){this.labMesh=createStack(asset);this.labMesh.position.set(0,2.3,0);this.labMesh.scale.setScalar(2);this.scene.add(this.labMesh);}this.sim.release();this.onChange();}
- setSliceCount(count:number){if(this.labMesh){const ends=this.labMesh.userData.sliceEnds as number[];this.labMesh.geometry.setDrawRange(0,ends[Math.max(0,Math.min(ends.length-1,count-1))]);}}
+ setSliceCount(count:number){if(this.labMesh){const ends=this.labMesh.userData.sliceEnds as number[];this.labMesh.userData.visibleVertices=ends[Math.max(0,Math.min(ends.length-1,count-1))];}}
  setQuality(level:string){this.renderer.setPixelRatio(level==='low'?1:Math.min(devicePixelRatio,level==='ultra'?2:1.5));this.resizeView();}
  resetCamera(){this.camera.zoom=1;this.camera.updateProjectionMatrix();}
  capture(){this.renderer.render(this.scene,this.camera);const a=document.createElement('a');a.download='wassieworld-experiment.png';a.href=this.renderer.domElement.toDataURL('image/png');a.click();}
  get metrics(){return {fps:this.fps,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,bodies:this.sim.world.bodies.len(),physicsMs:+this.physicsMs.toFixed(2)};}
- dispose(){cancelAnimationFrame(this.frame);this.abort.abort();this.resize.disconnect();this.sim.dispose();this.renderer.dispose();}
+ dispose(){cancelAnimationFrame(this.frame);this.abort.abort();this.resize.disconnect();this.sim.dispose();disposeStackCache();this.renderer.dispose();}
 }

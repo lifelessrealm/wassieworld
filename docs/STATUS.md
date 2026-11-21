@@ -20,6 +20,7 @@ This is the first playable development build from an empty repository. It is not
 | Replay, clip export, setup share codes, server persistence, leaderboards | Planned |
 | 12 environments, hundreds of finished tools, vehicles and creatures | Planned |
 | Vercel deployment | Build-ready; not deployed |
+| GitHub Actions | Workflow committed; account billing lock prevented runner startup. Local checks passed. |
 | 60 FPS desktop / 30–60 FPS mobile hardware targets | Not certified; see measured evidence in VERIFICATION.md |
 
 ## Next quality gates

@@ -4,24 +4,13 @@ export type Primitive = { shape: 'ellipsoid' | 'box'; center: Vec; size: Vec; co
 export type Volume = { id: string; size: Vec; resolution: number; layers: number; parts: Primitive[]; reference?:keyof typeof canonicalData };
 const e = (center: Vec, size: Vec, color: string): Primitive => ({ shape: 'ellipsoid', center, size, color });
 const b = (center: Vec, size: Vec, color: string): Primitive => ({ shape: 'box', center, size, color });
-const green = '#5e8e3d', ink = '#17241b', cream = '#f5f1d8', steel = '#869c9b', red = '#e56d53', wood = '#bc8756';
+const green = '#5e8e3d', cream = '#f5f1d8', steel = '#869c9b', red = '#e56d53', wood = '#bc8756';
 const volume = (id: string, size: Vec, parts: Primitive[], layers = 48, resolution = 48): Volume => ({ id, size, parts, layers, resolution });
 export const volumes: Record<string, Volume> = {
   torso: {...volume('torso', [1.34, 1.86, .7], [], 80,64),reference:'torso'},
-  head: volume('head', [1.48, 1.43, 1.03], [
-    e([0,0,-.08],[.69,.65,.4],green), e([-.27,.4,-.05],[.4,.28,.37],green),e([.28,.4,-.05],[.37,.26,.37],green),
-    e([-.31,.12,.267],[.36,.4,.2],ink),e([.31,.12,.267],[.34,.39,.2],ink),
-    e([-.31,.12,.29],[.332,.369,.19],cream),e([.31,.12,.29],[.313,.36,.19],cream),
-    e([-.26,.12,.442],[.202,.24,.046],'#080e0b'),e([.34,.12,.442],[.195,.23,.046],'#080e0b'),
-    e([-.32,.22,.482],[.044,.05,.016],'#ffffff'),e([-.18,.12,.483],[.065,.07,.015],'#ffffff'),
-    e([.28,.22,.482],[.04,.045,.016],'#ffffff'),e([.42,.12,.483],[.06,.065,.015],'#ffffff'),
-    e([-.32,.49,.283],[.39,.075,.075],ink),e([.31,.49,.283],[.36,.075,.075],ink),
-    e([-.32,.52,.29],[.39,.064,.07],green),e([.31,.52,.29],[.36,.064,.07],green),
-    e([0,-.39,.29],[.65,.12,.12],ink),e([0,-.39,.322],[.619,.09,.12],'#b66e57'),
-    e([0,-.395,.427],[.57,.014,.012],'#482b23')
-  ], 64,64),
+  head: {...volume('head',[1.58,1.32,1.02],[],64,64),reference:'head'},
   arm: volume('arm',[.26,1.25,.32],[e([0,0,0],[.12,.61,.14],green)],48,32),
-  foot: volume('foot',[.5,.25,.64],[e([0,0,0],[.23,.11,.3],ink),e([0,.025,.02],[.21,.09,.28],cream),b([-.13,-.01,.21],[.09,.06,.1],cream),b([.13,-.01,.21],[.09,.06,.1],cream)],16,32),
+  foot: {...volume('foot',[.46,.38,.68],[],24,48),reference:'leftFoot'},
   mallet: volume('mallet',[1.2,1.5,.65],[b([0,-.32,0],[.09,.41,.09],wood),b([0,.38,0],[.57,.29,.29],steel),b([-.49,.38,0],[.07,.31,.31],'#c4d4ca'),b([.49,.38,0],[.07,.31,.31],'#c4d4ca')]),
   glove: volume('glove',[.95,1.05,.8],[b([0,-.34,0],[.27,.17,.28],cream),e([0,.13,0],[.44,.39,.36],red),e([-.29,-.02,.14],[.16,.23,.24],'#bd453d')]),
   anvil: volume('anvil',[1.5,.9,.75],[b([0,-.31,0],[.55,.12,.34],steel),b([0,0,0],[.24,.3,.24],'#4f6565'),b([-.1,.29,0],[.56,.14,.32],steel),e([.5,.28,0],[.23,.12,.23],steel)]),
@@ -35,8 +24,6 @@ export const volumes: Record<string, Volume> = {
 };
 // Front identity comes from the canonical drawing. Its silhouette is converted
 // into a depth field, then sampled as a coherent 3D volume, not scaled 2D copies.
-volumes.head={...volume('head',[1.58,1.32,1.02],[],64,64),reference:'head'};
-volumes.foot={...volume('foot',[.46,.38,.68],[],24,48),reference:'leftFoot'};
 volumes.rightFoot={...volume('rightFoot',[.64,.35,.68],[],24,48),reference:'rightFoot'};
 const profiles=new Map<string,{width:number;height:number;bytes:Uint8Array;bounds:[number,number][]}>();
 function getProfile(key:keyof typeof canonicalData){
