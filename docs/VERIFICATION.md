@@ -12,12 +12,12 @@ This is a local browser simulation. There is no API/database boundary or secret 
 | `npm run assets` | 15 volume atlases/normal maps and metadata exported; 386 production requirements indexed |
 | `npm run build` | TypeScript and production Vite build passed |
 | `node scripts/production-smoke.mjs` | Production browser loaded, ten tools rendered, bomb scored, no debug API and no browser errors |
-| `npm run test:e2e` | 5 passing Chrome browser tests, latest run 25.0 s |
+| `npm run test:e2e` | 5 passing Chrome browser tests |
 | Browser startup | No page or console errors in the tested idle flow |
 
 System tests cover changing real cross-sections, occupancy/normals, valid tool registrations, damage decay and effect expiry, bounded repeat scoring, 20 seconds of stable articulated physics, grab/release momentum, bomb force and chain reactions, freeze/electric interactions, fans/launch pads, atomic setup validation, repeated reset resource counts, object limits, and a 30-prop mixed simulation stress case.
 
-Browser tests cover actual pointer placement and ragdoll grabbing/throwing, pause/time scale, search, bomb explosion/scoring, save/clear/load, reset, PNG downloads, laboratory source selection and slicing, and a touch-emulated 390×844 layout with placement/settings. Desktop screenshot viewport: 1440×1000. No horizontal overflow in the tested mobile layout.
+Browser tests cover actual pointer placement and ragdoll grabbing/throwing, pause/time scale, search, bomb explosion/scoring, save/clear/load, reset, PNG downloads, laboratory source selection and slicing, and a touch-emulated 390×844 layout with placement, touch grabbing/release and settings. Desktop screenshot viewport: 1440×1000. No horizontal overflow in the tested mobile layout. Narrow screens frame a closer central portion of the chamber to keep Wassie easier to touch.
 
 ## Rendering observations
 

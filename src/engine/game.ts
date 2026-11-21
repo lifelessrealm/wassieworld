@@ -52,7 +52,7 @@ export class Game {
   const batch=new T.InstancedMesh(new T.BoxGeometry(1,1,1),new T.MeshStandardMaterial({roughness:.85}),boxes.length);const m=new T.Matrix4();
   boxes.forEach((o,i)=>{const p=o.geometry.parameters;m.compose(o.position,o.quaternion,new T.Vector3(p.width,p.height,p.depth));batch.setMatrixAt(i,m);batch.setColorAt(i,o.material.color);this.scene.remove(o);o.geometry.dispose();o.material.dispose();});batch.computeBoundingSphere();this.scene.add(batch);
  }
- private resizeView(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);const aspect=w/h,height=Math.max(9.5,19/aspect);this.camera.left=-height*aspect/2;this.camera.right=height*aspect/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.near=.1;this.camera.far=70;this.camera.updateProjectionMatrix();}
+ private resizeView(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);const aspect=w/h,height=Math.max(9.5,(w<600?11.5:19)/aspect);this.camera.left=-height*aspect/2;this.camera.right=height*aspect/2;this.camera.top=height/2;this.camera.bottom=-height/2;this.camera.near=.1;this.camera.far=70;this.camera.updateProjectionMatrix();}
  private worldPoint(e:PointerEvent):Vec{const r=this.renderer.domElement.getBoundingClientRect();this.pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);this.ray.setFromCamera(this.pointer,this.camera);this.ray.ray.intersectPlane(this.plane,this.point);return [T.MathUtils.clamp(this.point.x,-8,8),T.MathUtils.clamp(this.point.y,.3,9),0];}
  private visual(e:Entity):Visual{
   const root=new T.Group(),mesh=createStack(e.asset);mesh.userData.entity=e.id;root.add(mesh);this.scene.add(root);
