@@ -14,7 +14,7 @@ The neutral front reconstruction retains approximately **98.7% foreground inters
 
 ## Coordinates and density
 
-Y up, front +Z, centered pivots, meters. Character X/Y samples use one texel per four source pixels; parts use 40–209 horizontal layers and **32 depth samples**. The head is 1.16 m deep with 0.32 m of facial relief allowance; the torso is 0.86 m deep. Source normals derive from front/back envelope gradients. Atlas tiles record both lateral and depth resolution. Props retain their existing sample counts. Full per-material normal/roughness atlases remain planned.
+Y up, front +Z, centered pivots, meters. Character X/Y samples use one texel per four source pixels; parts use 40–209 horizontal layers and **64 depth samples**. The head is 1.48 m deep with 0.32 m of facial relief allowance; the torso is 1.12 m deep. Arms wrap the flank in 1.14 m source bounds, and feet have 1.1 m heel/toe depth. Source normals derive from front/back envelope gradients. Atlas tiles record both lateral and depth resolution. Props retain their existing sample counts. Full per-material normal/roughness atlases remain planned.
 
 Palette anchors: skin `#5e8e3d`, ink `#17241b`, warm white `#f5f1d8`, steel `#869c9b`, orange/red `#e56d53`, wood `#bc8756`. Canonical reference front colors are preserved rather than reduced to these anchors. Runtime uses nearest-neighbor volume samples and crisp geometry; no blurry rescaling of source artwork.
 
@@ -47,3 +47,9 @@ The head is 1.48m deep and torso 1.12m deep within the existing source-pixel sca
 The rebake fills continuous green torso skin underneath the traced arm masks. Arm envelopes follow the underlying torso surface with a small overlap, so rotation no longer opens a gap between the chest and floating arm panels. The source arm ink belongs to the independently moving arms. Color/normal/side-material atlases are reproducible through the exporter.
 
 Front-facing artwork remains reference-aligned. At oblique angles, painted silhouette ink and antialiasing near the rim blend into the appropriate skin/eye/lip/foot material; this prevents a stretched black/white stripe on curved surfaces. The frontal material treatment gives way to volume lighting at side/rear angles. This is a material treatment on one closed 3D volume, not a separate side sprite.
+
+## Nape, flank and heel pass
+
+Row contours use a wider triangular smoothing window to reduce horizontal lighting bands. Rear cranium and shoulder masses are authored separately from the source facial relief. The head and torso reserve room inside their atlas bounds for displacement: the former envelope exceeded the head bounds and was clipped to a flat rear cap. Regression tests now check all six envelopes for clipping and retain headroom behind the cranium.
+
+Arm envelopes now follow both the front and back torso surface, with a small outer bulge. Their posterior material and inner seam keep them legible from behind without copying front arm ink. Heel depth reaches toward the back of the body, giving the side stance a fuller base. Original X/Y crops, facial landmarks and the unmodified canonical image remain the source of the front view.

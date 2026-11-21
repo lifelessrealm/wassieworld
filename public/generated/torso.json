@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#torso",
-  "occupiedVoxels": 1257880,
+  "occupiedVoxels": 1142868,
   "colorAtlas": "torso-color.png",
   "normalAtlas": "torso-normal.png",
   "sideMaterialAtlas": "torso-side.png"

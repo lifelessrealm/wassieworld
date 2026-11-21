@@ -3,7 +3,7 @@
   "size": [
     0.48148148148148145,
     0.4351851851851852,
-    0.68
+    1.1
   ],
   "layers": 47,
   "resolution": 52,
@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#foot",
-  "occupiedVoxels": 59798,
+  "occupiedVoxels": 63599,
   "colorAtlas": "foot-color.png",
   "normalAtlas": "foot-normal.png",
   "sideMaterialAtlas": "foot-side.png"

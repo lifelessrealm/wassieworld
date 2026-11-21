@@ -71,7 +71,24 @@ test('touch swings and pointer cancellation clean up the held tool',async({brows
 test('bigger blast has a visible shockwave and frees its temporary graphics',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);
  await state(page,g=>{g.sim.blast(g.sim.spawn('bomb',2,2)!);});await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(1);await page.screenshot({path:'test-results/bomb-shockwave.png',fullPage:true});
- await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(0);await page.waitForTimeout(1600);const baseline=await state(page,g=>g.renderer.info.memory.geometries);
- for(let i=0;i<3;i++){await state(page,g=>{g.sim.blast(g.sim.spawn('bomb',3,2)!);});await page.waitForTimeout(1800);}
+ await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(0);await state(page,g=>{g.sim.resetRoom();});await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='effect-particle'||o.name==='strike-feedback').length),{timeout:10000}).toBe(0);const baseline=await state(page,g=>g.renderer.info.memory.geometries);
+ for(let i=0;i<3;i++){await state(page,g=>{g.sim.blast(g.sim.spawn('bomb',6,7)!);});await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave'||o.name==='effect-particle').length),{timeout:10000}).toBe(0);}
  expect(await state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(0);await expect.poll(()=>state(page,g=>g.renderer.info.memory.geometries)).toBeLessThanOrEqual(baseline+2);expect(errors).toEqual([]);
+});
+
+test('real cursor contacts show anchored feedback and a wince, then release and recover',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);const box=(await page.locator('#game>canvas').boundingBox())!;
+ for(const [id,name,y]of [['mallet','Heavy mallet',2],['glove','Boxing glove',2.6]] as const){
+  await page.locator('#clear').click();await page.getByRole('button',{name:`Select ${name}`,exact:true}).click();
+  await state(page,g=>{const original=g.sim.onEvent;let captured=false;g.sim.onEvent=e=>{original(e);if(e.type==='impact'&&e.tool===g.selected&&!captured){captured=true;g.paused=true;}};});
+  const points=await page.evaluate(({y})=>{const g=(window as unknown as {__wassie:BrowserGame}).__wassie;return [-3,3].map(x=>{const v=g.scene.position.clone().set(x,y,0).project(g.camera);return {x:v.x,y:v.y};});},{y});
+  const start=box.x+(points[0].x+1)*box.width/2,end=box.x+(points[1].x+1)*box.width/2,sy=box.y+(1-points[0].y)*box.height/2;await page.mouse.move(start,sy);await page.mouse.down();
+  for(let i=1;i<=22;i++){await page.mouse.move(start+(end-start)*i/22,sy);await page.waitForTimeout(30);if(await state(page,g=>g.paused))break;}
+  expect(await state(page,g=>g.paused)).toBe(true);expect(await state(page,g=>g.sim.damage.blink)).toBeGreaterThan(0);expect(await state(page,g=>g.scene.children.filter(o=>o.name==='strike-feedback').length)).toBe(1);expect(await state(page,g=>g.sim.swingMotion?.ready)).toBe(false);
+  const time=await state(page,g=>g.sim.elapsed);await page.waitForTimeout(100);expect(await state(page,g=>g.sim.elapsed)).toBe(time);await page.screenshot({path:`test-results/strike-contact-${id}.png`,fullPage:true});
+  await state(page,g=>{g.paused=false;});await page.mouse.up();await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='strike-feedback').length)).toBe(0);expect(await state(page,g=>g.sim.save().props.length)).toBe(0);
+ }
+ // Follow the last actual punch through normal fixed-step recovery at a faster
+ // wall-clock rate; no position or velocity is overwritten for this check.
+ await state(page,g=>{g.timeScale=3;});await expect.poll(()=>state(page,g=>g.sim.poseState),{timeout:20000}).toBe('standing');expect(await state(page,g=>g.sim.entities[1].body.translation().y)).toBeGreaterThan(2.6);expect(errors).toEqual([]);
 });

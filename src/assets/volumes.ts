@@ -33,23 +33,30 @@ function getProfile(key:keyof typeof canonicalData){
  const dome=(u:number,v:number,cx:number,cy:number,rx:number,ry:number)=>Math.sqrt(Math.max(0,1-((u-cx)/rx)**2-((v-cy)/ry)**2));
  for(let y=0;y<d.height;y++)for(let x=0;x<d.width;x++){
   const i=y*d.width+x,u=(x+.5)/d.width,v=(y+.5)/d.height;
-  let l=0,r=0,total=0;for(let row=Math.max(0,y-3);row<=Math.min(d.height-1,y+3);row++){if(bounds[row][0]>bounds[row][1])continue;const weight=4-Math.abs(row-y);l+=bounds[row][0]*weight;r+=bounds[row][1]*weight;total+=weight;}l/=total||1;r/=total||1;
+  let l=0,r=0,total=0;for(let row=Math.max(0,y-10);row<=Math.min(d.height-1,y+10);row++){if(bounds[row][0]>bounds[row][1])continue;const weight=11-Math.abs(row-y);l+=bounds[row][0]*weight;r+=bounds[row][1]*weight;total+=weight;}l/=total||1;r/=total||1;
   const t=(x-(l+r)/2)/Math.max(1,(r-l)/2);
   const round=Math.sqrt(Math.max(0,1-t*t));
   // A closed lenticular cross-section curves BOTH sides. The old constant front
   // plane left a conspicuous straight cut down the entire side silhouette.
   const endTaper=key==='head'?Math.min(1,Math.sqrt(Math.max(0,1-((v-.48)/.49)**2))+.3*bump(u,v,.5,1,.9,.14)):key.includes('Foot')?(.64+.36*Math.sin(Math.PI*v)):(.64+.36*Math.sin(Math.PI*v)**.65);
   const contour=.04+.96*round*endTaper;
-  const bulk=size[2]-spec.relief,base=size[2]/2-spec.relief;
+  // Reserve atlas space for the nape/shoulder displacement; clipping the source
+  // envelope against its depth bounds would turn the rear into a flat cap.
+  const bulk=(size[2]-spec.relief)*(key==='head'?.86:key==='torso'?.9:1),base=size[2]/2-spec.relief;
   const centerShift=key==='head'?-.09*bump(u,v,.5,.3,.7,.4)+.09*bump(u,v,.5,.94,.7,.2):key==='torso'?-.05*bump(u,v,.5,.72,.7,.35):0;
   const relief=key==='head'?Math.max(dome(u,v,.49,.416,.177,.168),dome(u,v,.814,.416,.143,.16),dome(u,v,.62,.82,.37,.065)*.65):bump(u,v,.52,.55,.4,.55)*.5;
   front[i]=base-bulk*.46*(1-contour)+centerShift+spec.relief*relief;
   back[i]=base-bulk*.46-bulk*.54*contour+centerShift;
+  // Separate occipital and shoulder masses give the rear authored structure,
+  // with a gentler transition down the nape and into the lower back.
+  if(key==='head')back[i]-=.055*(bump(u,v,.38,.35,.32,.35)+bump(u,v,.7,.35,.28,.35))*round;
+  if(key==='torso')back[i]-=.04*(bump(u,v,.28,.17,.25,.2)+bump(u,v,.74,.17,.25,.2))*round;
   if(key==='leftArm'||key==='rightArm'){
    const torso=getProfile('torso'),body=characterParts[0],sx=spec.crop[0]+u*(spec.crop[2]-spec.crop[0]),sy=spec.crop[1]+v*(spec.crop[3]-spec.crop[1]);
    const tx=Math.max(0,Math.min(torso.width-1,Math.floor((sx-body.crop[0])/(body.crop[2]-body.crop[0])*torso.width))),ty=Math.max(0,Math.min(torso.height-1,Math.floor((sy-body.crop[1])/(body.crop[3]-body.crop[1])*torso.height)));
    const skin=torso.front[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset);
-   front[i]=skin+.012+.035*round;back[i]=front[i]-(.025+.24*round);
+   front[i]=skin+.012+.035*round;
+   back[i]=torso.back[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset)-.012-.035*round;
   }
  }
  const at=(data:Float32Array,x:number,y:number)=>data[Math.max(0,Math.min(d.height-1,y))*d.width+Math.max(0,Math.min(d.width-1,x))];
@@ -75,6 +82,7 @@ function referenceSample(v:Volume,point:Vec):{color:string;normal:Vec;edgeInk?:n
   if(((u-.62)/.37)**2+((t-.82)/.065)**2<1&&point[2]>base-.12)sideColor='#ad6a54';
  }
  if(v.id.toLowerCase().includes('foot'))sideColor='#efefdf';
+ if(!isFront&&(v.id==='leftArm'||v.id==='rightArm')){const u=(x+.5)/p.width;sideColor=((v.id==='leftArm'?u>.8:u<.2)&&p.distance[cell]<3)?'#41652f':'#59863b';}
  const color=painted?p.colors[cell]:sideColor;
  // Original silhouette ink and antialiasing belong to the supplied frontal
  // drawing. Fade that narrow rim toward the surface material when viewed from

@@ -1,16 +1,16 @@
 # Implementation status — 2026-11-21
 
-The playable foundation now has a rounded front/rear volume, cursor-tool and torso-led recovery refinement pass. The existing ten-tool catalog is unchanged. It is not the completed master-plan release.
+The playable foundation now has a nape/flank/heel anatomy, differentiated cursor strikes and recovery refinement pass. The existing ten-tool catalog is unchanged. It is not the completed master-plan release.
 
 | Area | Status |
 | --- | --- |
 | TypeScript app, static build, dependency lockfile | Implemented |
 | Coherent source volumes, horizontal atlases, normals, metadata | Implemented first pipeline |
-| Reference fidelity and final hero-art approval | Both surfaces curve; deeper cranium and torso, skin beneath traced arms, material-aware edge ink, sculpted eye/lip relief and volumetric feet. Front IoU remains about 0.9874. Inferred side/rear anatomy still requires artistic approval. |
+| Reference fidelity and final hero-art approval | Both surfaces curve; unclipped rear cranium, shoulder masses, arms wrapping the flanks, fuller heels and source-aligned facial relief. Front IoU remains about 0.9873. Inferred side/rear anatomy still requires artistic approval. |
 | Character studio | Front, quarter, left/right, rear, turntable and side/rear damage presets. Geometry-conforming combined effects. Lighting editor planned. |
-| Six-body articulated rig, CCD, fixed step, mouse/touch grab and throw | Passive joint settling; gradual torso-led recovery on actual support; bounded spring grab and cursor swings. |
+| Six-body articulated rig, CCD, fixed step, mouse/touch grab and throw | Passive joint settling; staged quintic torso-led recovery on actual support, brief eligibility grace; bounded grabs and differentiated cursor swings. |
 | Cartoon damage, freeze/electric combination, auto recovery | Contact-point and mass-sensitive impacts, per-part/per-surface marks, continuous directional recoil, surface frost/soot/shock, depth-aware stars and bandages. Full expression library planned. |
-| Testing chamber and ten functional tools | Mallet/glove are cursor-held swings; larger falloff bomb blast, shockwave/fireball/rumble; existing remaining tools retain their behaviors. |
+| Testing chamber and ten functional tools | Weightier mallet follow-through, quicker glove rebound/compression, one hit per continuous contact, actual-contact bursts/winces and differentiated procedural audio. Existing blast and other tools retained. |
 | Scoring, catalog search/categories, pause/time/gravity/reset/delete | Implemented |
 | Local prop setup save/load, PNG screenshot export | Implemented |
 | Synthesized effects and motion/resolution controls | Implemented first pass; music/voice and full mixing planned |

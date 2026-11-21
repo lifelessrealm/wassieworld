@@ -18,7 +18,7 @@ test('held tools attach once at the handle, stay out of saves and release their 
 });
 
 test('sweeping a held hammer or glove faster produces a stronger physical hit',()=>{
- for(const id of ['mallet','glove']){const strengths:number[]=[];for(const speed of [1,8]){const s=new Simulation();try{for(let i=0;i<120;i++)s.step();let strongest=0;s.onEvent=e=>{if(e.type==='impact')strongest=Math.max(strongest,e.strength);};const y=id==='mallet'?2:2.6;s.beginSwing(id,[-3,y,0]);for(let i=0;i<Math.ceil(6/speed/STEP);i++){s.moveSwing([-3+i*speed*STEP,y,0]);s.step();}strengths.push(strongest);assert.ok(s.entities.every(e=>Object.values(e.body.translation()).every(Number.isFinite)));}finally{s.dispose();}}assert.ok(strengths[1]>strengths[0]+3,`${id}: ${strengths}`);}
+ for(const id of ['mallet','glove']){const strengths:number[]=[];for(const speed of [1,8]){const s=new Simulation();try{for(let i=0;i<120;i++)s.step();let strongest=0;s.onEvent=e=>{if(e.type==='impact'&&e.tool===id)strongest=Math.max(strongest,e.strength);};const y=id==='mallet'?2:2.6;s.beginSwing(id,[-3,y,0]);for(let i=0;i<Math.ceil(6/speed/STEP);i++){s.moveSwing([-3+i*speed*STEP,y,0]);s.step();}strengths.push(strongest);assert.ok(s.entities.every(e=>Object.values(e.body.translation()).every(Number.isFinite)));}finally{s.dispose();}}assert.ok(strengths[1]>strengths[0]+3,`${id}: ${strengths}`);}
 });
 
 test('an actual cursor hit settles and rises continuously before returning to stance',()=>{

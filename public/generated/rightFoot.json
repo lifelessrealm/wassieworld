@@ -3,7 +3,7 @@
   "size": [
     0.7407407407407407,
     0.37037037037037035,
-    0.68
+    1.1
   ],
   "layers": 40,
   "resolution": 80,
@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightFoot",
-  "occupiedVoxels": 62449,
+  "occupiedVoxels": 66525,
   "colorAtlas": "rightFoot-color.png",
   "normalAtlas": "rightFoot-normal.png",
   "sideMaterialAtlas": "rightFoot-side.png"

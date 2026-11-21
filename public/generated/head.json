@@ -23,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#head",
-  "occupiedVoxels": 769922,
+  "occupiedVoxels": 689602,
   "colorAtlas": "head-color.png",
   "normalAtlas": "head-normal.png",
   "sideMaterialAtlas": "head-side.png"
