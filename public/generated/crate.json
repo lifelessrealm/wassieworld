@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#crate",
   "occupiedVoxels": 87080,
   "colorAtlas": "crate-color.png",
-  "normalAtlas": "crate-normal.png"
+  "normalAtlas": "crate-normal.png",
+  "sideMaterialAtlas": "crate-side.png"
 }

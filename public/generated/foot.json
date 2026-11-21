@@ -7,10 +7,10 @@
   ],
   "layers": 47,
   "resolution": 52,
-  "depthResolution": 32,
+  "depthResolution": 64,
   "tileSize": [
     52,
-    32
+    64
   ],
   "columns": 8,
   "rows": 6,
@@ -23,7 +23,8 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#foot",
-  "occupiedVoxels": 30313,
+  "occupiedVoxels": 59798,
   "colorAtlas": "foot-color.png",
-  "normalAtlas": "foot-normal.png"
+  "normalAtlas": "foot-normal.png",
+  "sideMaterialAtlas": "foot-side.png"
 }

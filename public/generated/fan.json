@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#fan",
   "occupiedVoxels": 36114,
   "colorAtlas": "fan-color.png",
-  "normalAtlas": "fan-normal.png"
+  "normalAtlas": "fan-normal.png",
+  "sideMaterialAtlas": "fan-side.png"
 }

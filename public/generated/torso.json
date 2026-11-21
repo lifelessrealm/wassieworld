@@ -3,14 +3,14 @@
   "size": [
     1.5,
     1.9351851851851851,
-    0.86
+    1.12
   ],
   "layers": 209,
   "resolution": 162,
-  "depthResolution": 32,
+  "depthResolution": 64,
   "tileSize": [
     162,
-    32
+    64
   ],
   "columns": 8,
   "rows": 27,
@@ -23,7 +23,8 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#torso",
-  "occupiedVoxels": 506734,
+  "occupiedVoxels": 1257880,
   "colorAtlas": "torso-color.png",
-  "normalAtlas": "torso-normal.png"
+  "normalAtlas": "torso-normal.png",
+  "sideMaterialAtlas": "torso-side.png"
 }

@@ -5,36 +5,45 @@ import {volumes,type Vec} from '../assets/volumes.ts';
 import {Sound} from './audio.ts';
 import {characterParts,bindPosition} from '../assets/character.ts';
 import {DamageState} from '../game/damage.ts';
+import {toolById} from '../assets/catalog.ts';
 import {createCharacterOverlay,paintCharacterOverlay,disposeCharacterOverlay,type CharacterOverlay} from './character-effects.ts';
 type Visual={root:T.Group;mesh:T.InstancedMesh;shadow:T.Mesh;overlay?:CharacterOverlay};
 export class Game {
  readonly sim=new Simulation();readonly scene=new T.Scene();readonly camera=new T.OrthographicCamera();readonly renderer:T.WebGLRenderer;
- readonly sound=new Sound(); selected='grab';paused=false;timeScale=1;reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ readonly sound=new Sound();private selection='grab';paused=false;timeScale=1;reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ private cursorTool?:T.InstancedMesh;private cursorPoint:Vec=[0,3,0];private pointerInside=false;
+ private blasts:{root:T.Group;ring:T.Mesh;flash:T.Mesh;light:T.PointLight;age:number}[]=[];
  lab=false;labAsset='character';labDamage=new DamageState();labTurntable=false;private labRoot?:T.Group;private labMesh?:T.InstancedMesh;private labOverlays:CharacterOverlay[]=[];private visuals=new Map<number,Visual>();private ray=new T.Raycaster();private plane=new T.Plane(new T.Vector3(0,0,1),0);private point=new T.Vector3();private pointer=new T.Vector2();private pointerId:number|null=null;private abort=new AbortController();private resize:ResizeObserver;private frame=0;private accumulator=0;private last=0;private frames=0;private fpsTime=0;fps=0;physicsMs=0;private shake=0;private hitStop=0;private particles:{mesh:T.Mesh;velocity:T.Vector3;life:number}[]=[];
  onChange=()=>{};onNotice=(text:string)=>{};onMetrics=()=>{};
  private labBackdrop?:T.Mesh;
  constructor(readonly host:HTMLElement){
   this.renderer=new T.WebGLRenderer({antialias:false,alpha:false,preserveDrawingBuffer:true});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.setClearColor('#263b35');this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.25;
-  this.renderer.domElement.setAttribute('aria-label','Interactive WassieWorld physics chamber. Select a tool and click to place it, or drag Wassie.');this.renderer.domElement.tabIndex=0;host.prepend(this.renderer.domElement);
+  this.renderer.domElement.setAttribute('aria-label','Interactive WassieWorld physics chamber. Hold and drag to swing a mallet or glove, click to place other tools, or drag Wassie.');this.renderer.domElement.tabIndex=0;host.prepend(this.renderer.domElement);
   this.scene.fog=new T.Fog('#263b35',28,52);this.camera.position.set(2.4,7.5,19);this.camera.lookAt(0,2.5,0);
   this.scene.add(new T.HemisphereLight('#f3f4cf','#34493d',2.5));const key=new T.DirectionalLight('#fff0cf',3.8);key.position.set(-5,9,6);this.scene.add(key);const rim=new T.DirectionalLight('#97d8cc',2.6);rim.position.set(5,6,-5);this.scene.add(rim);const lamp=new T.PointLight('#dcf895',18,12,2);lamp.position.set(-4,5,2);this.scene.add(lamp);
   this.room();this.sim.onEvent=e=>this.effect(e);
   this.resize=new ResizeObserver(()=>this.resizeView());this.resize.observe(host);this.resizeView();
   const canvas=this.renderer.domElement,signal=this.abort.signal;
   canvas.addEventListener('pointerdown',e=>{if(this.lab||this.pointerId!==null)return;this.sound.unlock();canvas.focus();const p=this.worldPoint(e);this.pointerId=e.pointerId;canvas.setPointerCapture(e.pointerId);
-   if(this.selected==='grab'||this.selected==='delete'){
+   this.pointerInside=true;this.cursorPoint=p;
+   if(toolById(this.selected)?.held){this.sim.beginSwing(this.selected,p);}
+   else if(this.selected==='grab'||this.selected==='delete'){
     this.ray.setFromCamera(this.pointer,this.camera);const hits=this.ray.intersectObjects([...this.visuals.values()].map(v=>v.mesh),false);const id=hits[0]?.object.userData.entity as number|undefined;const entity=this.sim.entities.find(x=>x.id===id);
     if(entity){if(this.selected==='delete'){if(!entity.part)this.sim.remove(entity);}else this.sim.beginGrab(entity,p);}
    }else{const entity=this.sim.spawn(this.selected,p[0],p[1]);if(!entity)this.onNotice('Chamber limit reached. Delete a prop or reset the room.');else this.onNotice(`${entity.tool!.name} deployed`);}
    this.onChange();
   },{signal});
-  canvas.addEventListener('pointermove',e=>{if(this.pointerId===e.pointerId)this.sim.moveGrab(this.worldPoint(e));},{signal});
-  const end=(e:PointerEvent)=>{if(e.pointerId!==this.pointerId)return;this.sim.release();this.pointerId=null;};for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,end as EventListener,{signal});
-  window.addEventListener('blur',()=>{this.sim.release();this.pointerId=null;},{signal});
-  document.addEventListener('visibilitychange',()=>{this.accumulator=0;this.last=0;if(document.hidden){this.sim.release();this.pointerId=null;}},{signal});
+  canvas.addEventListener('pointermove',e=>{this.cursorPoint=this.worldPoint(e);this.pointerInside=true;if(this.pointerId===e.pointerId){this.sim.moveGrab(this.cursorPoint);this.sim.moveSwing(this.cursorPoint);}},{signal});
+  canvas.addEventListener('pointerleave',()=>{this.pointerInside=false;},{signal});
+  const end=(e:PointerEvent)=>{if(e.pointerId!==this.pointerId)return;this.cancelInteraction();if(e.pointerType==='touch'||e.type==='pointercancel')this.pointerInside=false;};for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,end as EventListener,{signal});
+  window.addEventListener('blur',()=>{this.cancelInteraction();this.pointerInside=false;},{signal});
+  document.addEventListener('visibilitychange',()=>{this.accumulator=0;this.last=0;if(document.hidden){this.cancelInteraction();this.pointerInside=false;}},{signal});
   canvas.addEventListener('wheel',e=>{e.preventDefault();this.camera.zoom=T.MathUtils.clamp(this.camera.zoom-e.deltaY*.001,.75,1.7);this.camera.updateProjectionMatrix();},{passive:false,signal});
   this.frame=requestAnimationFrame(t=>this.animate(t));
  }
+ get selected(){return this.selection;}
+ set selected(id:string){this.cancelInteraction();this.selection=id;if(this.cursorTool){this.scene.remove(this.cursorTool);this.cursorTool.dispose();this.cursorTool=undefined;}if(toolById(id)?.held){this.cursorTool=createStack(id);this.scene.add(this.cursorTool);}this.renderer.domElement.style.cursor=toolById(id)?.held?'none':'';}
+ private cancelInteraction(){const id=this.pointerId;this.pointerId=null;this.sim.release();this.sim.endSwing();if(id!==null&&this.renderer.domElement.hasPointerCapture(id))this.renderer.domElement.releasePointerCapture(id);}
  private box(w:number,h:number,d:number,color:string,x:number,y:number,z:number){const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshStandardMaterial({color,roughness:.85}));mesh.position.set(x,y,z);this.scene.add(mesh);return mesh;}
  private label(text:string,x:number,y:number,z:number,width:number,color='#d5e3ca',font='bold 60px monospace'){
   const c=document.createElement('canvas');c.width=1024;c.height=256;const ctx=c.getContext('2d')!;ctx.fillStyle=color;ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,512,128);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;
@@ -66,8 +75,9 @@ export class Game {
   this.visuals.set(e.id,v);return v;
  }
  private disposeOverlay(overlay?:CharacterOverlay){disposeCharacterOverlay(overlay);}
- private effect(e:GameEvent){this.sound.play(e.type,e.strength);this.shake=this.reducedMotion?0:Math.min(.1,e.strength*.004);if(!this.reducedMotion&&e.type==='impact'&&e.strength>8)this.hitStop=Math.min(.045,e.strength*.002);if(e.points)this.onNotice(`${e.type==='blast'?'UNSCHEDULED DISASSEMBLY':e.type==='freeze'?'BRAIN FREEZE':e.type==='shock'?'SHOCKING DEVELOPMENT':e.type==='launch'?'SPACE PROGRAM':'MINOR INCONVENIENCE'}  +${e.points}`);
-  const count=this.reducedMotion?3:Math.min(20,Math.ceil(e.strength));for(let i=0;i<count&&this.particles.length<100;i++){const mesh=new T.Mesh(new T.BoxGeometry(.055,.055,.055),new T.MeshBasicMaterial({color:e.type==='blast'?'#efbb69':e.type==='freeze'?'#a4e4eb':'#d7e887'}));mesh.position.set(...e.position);this.scene.add(mesh);const angle=i*2.39996;this.particles.push({mesh,velocity:new T.Vector3(Math.cos(angle)*2,Math.sin(angle)*2+2,.7),life:.7});}this.onChange();
+ private effect(e:GameEvent){this.sound.play(e.type,e.strength);this.shake=this.reducedMotion?0:Math.min(e.type==='blast'?.22:.1,e.strength*.006);if(!this.reducedMotion&&e.type==='impact'&&e.strength>8)this.hitStop=Math.min(.045,e.strength*.002);if(e.points)this.onNotice(`${e.type==='blast'?'UNSCHEDULED DISASSEMBLY':e.type==='freeze'?'BRAIN FREEZE':e.type==='shock'?'SHOCKING DEVELOPMENT':e.type==='launch'?'SPACE PROGRAM':'MINOR INCONVENIENCE'}  +${e.points}`);
+  if(e.type==='blast'&&this.blasts.length<4){const root=new T.Group();root.name='blast-wave';root.position.set(...e.position);const ring=new T.Mesh(new T.RingGeometry(.94,1,64),new T.MeshBasicMaterial({color:'#ffd58a',transparent:true,opacity:.85,side:T.DoubleSide,depthWrite:false}));const flash=new T.Mesh(new T.IcosahedronGeometry(1,1),new T.MeshBasicMaterial({color:'#fff1b6',transparent:true,opacity:.9,depthWrite:false}));const light=new T.PointLight('#ffb856',35,8,2);root.add(ring,flash,light);this.scene.add(root);this.blasts.push({root,ring,flash,light,age:0});}
+  const count=this.reducedMotion?3:e.type==='blast'?44:Math.min(20,Math.ceil(e.strength));for(let i=0;i<count&&this.particles.length<100;i++){const blast=e.type==='blast',smoke=blast&&i%3===0,size=blast?(smoke?.28:.12):.055,mesh=new T.Mesh(new T.BoxGeometry(size,size,size),new T.MeshBasicMaterial({color:blast?(smoke?'#626756':i%2?'#efbb69':'#ee8248'):e.type==='freeze'?'#a4e4eb':'#d7e887',transparent:true}));mesh.position.set(...e.position);this.scene.add(mesh);const angle=i*2.39996,speed=blast?(smoke?2:4+i%4):2;this.particles.push({mesh,velocity:new T.Vector3(Math.cos(angle)*speed,Math.sin(angle)*speed+2,Math.sin(i*1.7)*(blast?2:.7)),life:blast?1.3:.7});}this.onChange();
  }
  private animate(now:number){this.frame=requestAnimationFrame(t=>this.animate(t));const dt=this.last?Math.min((now-this.last)/1000,.08):0;this.last=now;this.frames++;this.fpsTime+=dt;
   if(this.fpsTime>.5){this.fps=Math.round(this.frames/this.fpsTime);this.frames=0;this.fpsTime=0;this.onMetrics();}
@@ -82,6 +92,8 @@ export class Game {
    v.root.visible=!this.lab;v.shadow.visible=!this.lab;v.shadow.position.x=p.x;v.shadow.scale.setScalar(Math.max(.2,volumes[e.asset].size[0]*.7));(v.shadow.material as T.MeshBasicMaterial).opacity=Math.max(.035,.22-p.y*.022);if(v.overlay)paintCharacterOverlay(v.overlay,this.sim.damage,this.sim.elapsed);
   }
   const effectsDt=this.paused||this.lab||stopped?0:dt*this.timeScale;
+  if(this.cursorTool){this.cursorTool.visible=this.pointerInside&&!this.lab&&!this.sim.swinging;this.cursorTool.position.set(this.cursorPoint[0],this.cursorPoint[1]+(this.selected==='mallet'?.62:.28),.35);}
+  for(const b of [...this.blasts]){b.age+=effectsDt;const t=b.age;b.root.visible=!this.lab;b.ring.scale.setScalar(this.reducedMotion?1.2:.25+Math.min(1,t/.55)*5.6);(b.ring.material as T.MeshBasicMaterial).opacity=(this.reducedMotion?.2:.8)*Math.max(0,1-t/.65);b.flash.scale.setScalar(this.reducedMotion?.45:.15+Math.sin(Math.min(1,t/.32)*Math.PI)*1.7);(b.flash.material as T.MeshBasicMaterial).opacity=(this.reducedMotion?.2:1)*Math.max(0,1-t/.32);b.light.intensity=this.reducedMotion?0:35*Math.max(0,1-t/.3);if(t>.7){this.scene.remove(b.root);b.ring.geometry.dispose();b.flash.geometry.dispose();(b.ring.material as T.Material).dispose();(b.flash.material as T.Material).dispose();b.light.dispose();this.blasts.splice(this.blasts.indexOf(b),1);}}
   for(const p of [...this.particles]){p.life-=effectsDt;p.mesh.position.addScaledVector(p.velocity,effectsDt);p.velocity.y-=effectsDt*6;p.mesh.scale.setScalar(Math.max(0,p.life));if(p.life<=0){this.scene.remove(p.mesh);p.mesh.geometry.dispose();(p.mesh.material as T.Material).dispose();this.particles.splice(this.particles.indexOf(p),1);}}
   if(this.labRoot){this.labDamage.tick(dt);if(this.labTurntable)this.labRoot.rotation.y+=dt*.25;for(const overlay of this.labOverlays)paintCharacterOverlay(overlay,this.labDamage,now/1000);const d=this.labDamage.deformation,p=bindPosition(characterParts[0]);const deformation=new T.Matrix4().makeTranslation(...p).multiply(new T.Matrix4().makeRotationZ(d.angle)).multiply(new T.Matrix4().makeScale(d.x,d.y,1)).multiply(new T.Matrix4().makeRotationZ(-d.angle)).multiply(new T.Matrix4().makeTranslation(-p[0],-p[1],0));this.labRoot.matrixAutoUpdate=false;this.labRoot.matrix.compose(this.labRoot.position,this.labRoot.quaternion,new T.Vector3(1,1,1)).multiply(deformation);this.labRoot.matrixWorldNeedsUpdate=true;}
   this.shake*=Math.exp(-dt*18);this.camera.setViewOffset(this.host.clientWidth,this.host.clientHeight,Math.sin(now*.08)*this.shake*35,Math.cos(now*.09)*this.shake*25,this.host.clientWidth,this.host.clientHeight);
@@ -99,7 +111,7 @@ export class Game {
    else {const mesh=createStack(asset);this.labMesh=mesh;mesh.position.y=1.8;root.add(mesh);const overlay=createCharacterOverlay(asset);if(overlay){overlay.mesh.position.y=1.8;overlay.effects.position.y=1.8;root.add(overlay.mesh,overlay.effects);this.labOverlays.push(overlay);}}
    this.scene.add(root);this.camera.position.set(0,1.8,19);this.camera.lookAt(0,1.8,0);this.camera.zoom=this.host.clientWidth<600?1.2:2;
   }else {this.camera.position.set(2.4,7.5,19);this.camera.lookAt(0,2.5,0);this.camera.zoom=1;}
-  this.camera.updateProjectionMatrix();this.sim.release();this.onChange();
+  this.camera.updateProjectionMatrix();this.cancelInteraction();this.onChange();
  }
  setLabAngle(angle:number){if(this.labRoot){this.labTurntable=false;this.labRoot.rotation.y=angle;}}
  setDamagePreview(preset:string){
@@ -116,5 +128,5 @@ export class Game {
  resetCamera(){this.camera.zoom=1;this.camera.updateProjectionMatrix();}
  capture(){this.renderer.render(this.scene,this.camera);const a=document.createElement('a');a.download='wassieworld-experiment.png';a.href=this.renderer.domElement.toDataURL('image/png');a.click();}
  get metrics(){return {fps:this.fps,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,bodies:this.sim.world.bodies.len(),physicsMs:+this.physicsMs.toFixed(2)};}
- dispose(){cancelAnimationFrame(this.frame);this.abort.abort();this.resize.disconnect();this.sim.dispose();disposeStackCache();this.renderer.dispose();}
+ dispose(){cancelAnimationFrame(this.frame);this.abort.abort();this.resize.disconnect();this.cancelInteraction();this.cursorTool?.dispose();for(const b of this.blasts){b.ring.geometry.dispose();b.flash.geometry.dispose();(b.ring.material as T.Material).dispose();(b.flash.material as T.Material).dispose();b.light.dispose();}for(const p of this.particles){p.mesh.geometry.dispose();(p.mesh.material as T.Material).dispose();}for(const v of this.visuals.values()){this.disposeOverlay(v.overlay);v.mesh.dispose();v.shadow.geometry.dispose();(v.shadow.material as T.Material).dispose();}for(const overlay of this.labOverlays)this.disposeOverlay(overlay);this.sim.dispose();disposeStackCache();this.renderer.dispose();}
 }

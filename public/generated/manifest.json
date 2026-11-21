@@ -264,14 +264,14 @@
     "size": [
       1.5,
       1.9351851851851851,
-      0.86
+      1.12
     ],
     "layers": 209,
     "resolution": 162,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       162,
-      32
+      64
     ],
     "columns": 8,
     "rows": 27,
@@ -290,14 +290,14 @@
     "size": [
       1.6759259259259258,
       1.3888888888888888,
-      1.16
+      1.48
     ],
     "layers": 150,
     "resolution": 181,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       181,
-      32
+      64
     ],
     "columns": 8,
     "rows": 19,
@@ -316,14 +316,14 @@
     "size": [
       0.39814814814814814,
       1.5277777777777777,
-      0.4
+      0.65
     ],
     "layers": 165,
     "resolution": 43,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       43,
-      32
+      64
     ],
     "columns": 8,
     "rows": 21,
@@ -342,14 +342,14 @@
     "size": [
       0.2222222222222222,
       1.4351851851851851,
-      0.4
+      0.65
     ],
     "layers": 155,
     "resolution": 24,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       24,
-      32
+      64
     ],
     "columns": 8,
     "rows": 20,
@@ -372,10 +372,10 @@
     ],
     "layers": 47,
     "resolution": 52,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       52,
-      32
+      64
     ],
     "columns": 8,
     "rows": 6,
@@ -398,10 +398,10 @@
     ],
     "layers": 40,
     "resolution": 80,
-    "depthResolution": 32,
+    "depthResolution": 64,
     "tileSize": [
       80,
-      32
+      64
     ],
     "columns": 8,
     "rows": 5,

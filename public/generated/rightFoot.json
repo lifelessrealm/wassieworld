@@ -7,10 +7,10 @@
   ],
   "layers": 40,
   "resolution": 80,
-  "depthResolution": 32,
+  "depthResolution": 64,
   "tileSize": [
     80,
-    32
+    64
   ],
   "columns": 8,
   "rows": 5,
@@ -23,7 +23,8 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightFoot",
-  "occupiedVoxels": 31622,
+  "occupiedVoxels": 62449,
   "colorAtlas": "rightFoot-color.png",
-  "normalAtlas": "rightFoot-normal.png"
+  "normalAtlas": "rightFoot-normal.png",
+  "sideMaterialAtlas": "rightFoot-side.png"
 }

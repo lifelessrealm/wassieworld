@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#glove",
   "occupiedVoxels": 50889,
   "colorAtlas": "glove-color.png",
-  "normalAtlas": "glove-normal.png"
+  "normalAtlas": "glove-normal.png",
+  "sideMaterialAtlas": "glove-side.png"
 }

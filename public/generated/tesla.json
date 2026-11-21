@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#tesla",
   "occupiedVoxels": 34968,
   "colorAtlas": "tesla-color.png",
-  "normalAtlas": "tesla-normal.png"
+  "normalAtlas": "tesla-normal.png",
+  "sideMaterialAtlas": "tesla-side.png"
 }

@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#mallet",
   "occupiedVoxels": 39328,
   "colorAtlas": "mallet-color.png",
-  "normalAtlas": "mallet-normal.png"
+  "normalAtlas": "mallet-normal.png",
+  "sideMaterialAtlas": "mallet-side.png"
 }

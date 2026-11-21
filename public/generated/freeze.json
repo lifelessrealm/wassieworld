@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#freeze",
   "occupiedVoxels": 52376,
   "colorAtlas": "freeze-color.png",
-  "normalAtlas": "freeze-normal.png"
+  "normalAtlas": "freeze-normal.png",
+  "sideMaterialAtlas": "freeze-side.png"
 }

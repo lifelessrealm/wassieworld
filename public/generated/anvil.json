@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#anvil",
   "occupiedVoxels": 52572,
   "colorAtlas": "anvil-color.png",
-  "normalAtlas": "anvil-normal.png"
+  "normalAtlas": "anvil-normal.png",
+  "sideMaterialAtlas": "anvil-side.png"
 }

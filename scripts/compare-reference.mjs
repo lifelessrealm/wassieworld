@@ -1,14 +1,14 @@
 import {chromium} from '@playwright/test';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {PNG} from 'pngjs';
-const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.__wassie);await page.locator('#lab').click();
+const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await page.goto('http://127.0.0.1:5173');await page.waitForFunction(()=>window.__wassie);await page.locator('#lab').click();
 const data=await page.evaluate(()=>{
  const g=window.__wassie;g.setLabAngle(0);g.setDamagePreview('neutral');
  for(const child of g.scene.children)child.visible=Boolean(child===g.labRoot||child.isLight);
  const camera=g.camera;camera.position.set(0,0,19);camera.rotation.set(0,0,0);camera.zoom=1;camera.clearViewOffset();camera.left=(28-350)/432;camera.right=(824-350)/432;camera.top=(2044-480)/432;camera.bottom=0;camera.updateProjectionMatrix();
  g.renderer.setPixelRatio(1);g.renderer.setSize(398,782);g.renderer.setClearColor('#ffffff');g.renderer.render(g.scene,camera);return g.renderer.domElement.toDataURL('image/png');
 });
-await mkdir('test-results/character',{recursive:true});const buffer=Buffer.from(data.split(',')[1],'base64');await writeFile('test-results/character/front-render.png',buffer);
+if(errors.length)throw Error(errors.join('\n'));await mkdir('test-results/character',{recursive:true});const buffer=Buffer.from(data.split(',')[1],'base64');await writeFile('test-results/character/front-render.png',buffer);
 const actual=PNG.sync.read(buffer),source=PNG.sync.read(await readFile('public/generated/wassie-reference-crop.png')),comparison=new PNG({width:actual.width*2,height:actual.height});
 let union=0,intersection=0,error=0,samples=0;
 for(let y=0;y<actual.height;y++)for(let x=0;x<actual.width;x++){

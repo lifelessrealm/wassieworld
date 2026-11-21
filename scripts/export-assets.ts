@@ -7,8 +7,8 @@ await mkdir('public/generated',{recursive:true});
 const manifest=[];
 for(const v of Object.values(volumes)){
  const data=compileVolume(v);
- for(const [suffix,bytes]of [['color',data.color],['normal',data.normals]] as const){const png=new PNG({width:data.width,height:data.height});png.data=Buffer.from(bytes);await writeFile(`public/generated/${v.id}-${suffix}.png`,PNG.sync.write(png));}
- await writeFile(`public/generated/${v.id}.json`,JSON.stringify({...data.metadata,occupiedVoxels:data.occupied,colorAtlas:`${v.id}-color.png`,normalAtlas:`${v.id}-normal.png`},null,2)+'\n');manifest.push(data.metadata);
+ for(const [suffix,bytes]of [['color',data.color],['normal',data.normals],['side',data.sideColors]] as const){const png=new PNG({width:data.width,height:data.height});png.data=Buffer.from(bytes);await writeFile(`public/generated/${v.id}-${suffix}.png`,PNG.sync.write(png));}
+ await writeFile(`public/generated/${v.id}.json`,JSON.stringify({...data.metadata,occupiedVoxels:data.occupied,colorAtlas:`${v.id}-color.png`,normalAtlas:`${v.id}-normal.png`,sideMaterialAtlas:`${v.id}-side.png`},null,2)+'\n');manifest.push(data.metadata);
 }
 await writeFile('public/generated/manifest.json',JSON.stringify(manifest,null,2)+'\n');
 const plan=await readFile('docs/MASTER_PLAN.md','utf8');

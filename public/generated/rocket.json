@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#rocket",
   "occupiedVoxels": 37822,
   "colorAtlas": "rocket-color.png",
-  "normalAtlas": "rocket-normal.png"
+  "normalAtlas": "rocket-normal.png",
+  "sideMaterialAtlas": "rocket-side.png"
 }

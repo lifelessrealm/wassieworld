@@ -43,8 +43,35 @@ test('side and rear surface reactions render without shader errors or reset reso
 test('touch-sized layout, touch placement and settings remain usable',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const page=await context.newPage();await ready(page);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
- await page.getByRole('button',{name:'Select Boxing glove',exact:true}).tap();const b=(await page.locator('#game>canvas').boundingBox())!;await page.touchscreen.tap(b.x+b.width*.66,b.y+b.height*.4);await expect.poll(()=>state(page,g=>g.sim.entities.filter(e=>e.asset==='glove').length)).toBe(1);
+ await page.getByRole('button',{name:'Select Wooden crate',exact:true}).tap();const b=(await page.locator('#game>canvas').boundingBox())!;await page.touchscreen.tap(b.x+b.width*.66,b.y+b.height*.4);await expect.poll(()=>state(page,g=>g.sim.entities.filter(e=>e.asset==='crate').length)).toBe(1);
  await page.locator('#grab').tap();const point=await state(page,g=>{const p=g.sim.entities.find(e=>e.asset==='head')!.body.translation();const v=g.scene.position.clone().set(p.x,p.y,.35).project(g.camera);return {x:v.x,y:v.y};});const x=b.x+(point.x+1)*b.width/2,y=b.y+(1-point.y)*b.height/2;
  const cdp=await context.newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await expect.poll(()=>state(page,g=>g.sim.grabbing)).toBe(true);await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+35,y:y-30}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});expect(await state(page,g=>g.sim.grabbing)).toBe(false);await cdp.detach();
  await page.locator('#settings').tap();await page.locator('#motion-setting').check();expect(await state(page,g=>g.reducedMotion)).toBe(true);await page.locator('#sound-setting').uncheck();expect(await state(page,g=>g.sound.muted)).toBe(true);await page.locator('#quality-setting').selectOption('low');await page.locator('#close-dialog').tap();await page.screenshot({path:'test-results/chamber-mobile.png',fullPage:true});await context.close();
+});
+
+test('cursor mallet and glove swing into Wassie without placing or saving loose items',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);const box=(await page.locator('#game>canvas').boundingBox())!;
+ for(const [id,name,y]of [['mallet','Heavy mallet',2],['glove','Boxing glove',2.6]] as const){
+  await page.locator('#clear').click();await page.getByRole('button',{name:`Select ${name}`,exact:true}).click();await expect(page.locator('#hint')).toContainText('HOLD + DRAG');
+  const points=await state(page,g=>[-3,3].map(x=>{const v=g.scene.position.clone().set(x,2.3,0).project(g.camera);return {x:v.x,y:v.y};}));
+  // A horizontal stroke through the upper body exercises the real pointer path.
+  const start={x:box.x+(points[0].x+1)*box.width/2,y:box.y+(1-points[0].y)*box.height/2+(y===2?-15:15)},end=box.x+(points[1].x+1)*box.width/2;
+  await page.mouse.move(start.x,start.y);expect(await state(page,g=>g.sim.entities.length)).toBe(6);await page.mouse.down();await expect.poll(()=>state(page,g=>g.sim.swinging)).toBe(true);expect(await state(page,g=>g.sim.heldTool?.asset)).toBe(id);
+  for(let i=1;i<=20;i++){await page.mouse.move(start.x+(end-start.x)*i/20,start.y);await page.waitForTimeout(30);if(i===11)await page.screenshot({path:`test-results/cursor-${id}.png`,fullPage:true});}
+  expect(await state(page,g=>g.sim.score.total)).toBeGreaterThan(0);expect(await state(page,g=>g.sim.save().props.length)).toBe(0);await page.mouse.up();await expect.poll(()=>state(page,g=>g.sim.world.bodies.len())).toBe(6);expect(await state(page,g=>g.sim.world.impulseJoints.len())).toBe(5);
+ }
+ await page.mouse.down();expect(await state(page,g=>g.sim.swinging)).toBe(true);await page.getByRole('button',{name:'Select Wooden crate',exact:true}).click();expect(await state(page,g=>g.sim.swinging)).toBe(false);await page.mouse.up();expect(await state(page,g=>g.sim.entities.filter(e=>e.held).length)).toBe(0);expect(errors).toEqual([]);
+});
+
+test('touch swings and pointer cancellation clean up the held tool',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const page=await context.newPage();await ready(page);await page.getByRole('button',{name:'Select Boxing glove',exact:true}).tap();const box=(await page.locator('#game>canvas').boundingBox())!,cdp=await context.newCDPSession(page),x=box.x+box.width*.25,y=box.y+box.height*.52;
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await expect.poll(()=>state(page,g=>g.sim.swinging)).toBe(true);await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+100,y:y-20}]});await page.waitForTimeout(200);await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});await expect.poll(()=>state(page,g=>g.sim.swinging)).toBe(false);expect(await state(page,g=>g.sim.world.bodies.len())).toBe(6);expect(await state(page,g=>g.sim.world.impulseJoints.len())).toBe(5);expect(await state(page,g=>g.sim.save().props.length)).toBe(0);await cdp.detach();await context.close();
+});
+
+test('bigger blast has a visible shockwave and frees its temporary graphics',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});await ready(page);
+ await state(page,g=>{g.sim.blast(g.sim.spawn('bomb',2,2)!);});await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(1);await page.screenshot({path:'test-results/bomb-shockwave.png',fullPage:true});
+ await expect.poll(()=>state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(0);await page.waitForTimeout(1600);const baseline=await state(page,g=>g.renderer.info.memory.geometries);
+ for(let i=0;i<3;i++){await state(page,g=>{g.sim.blast(g.sim.spawn('bomb',3,2)!);});await page.waitForTimeout(1800);}
+ expect(await state(page,g=>g.scene.children.filter(o=>o.name==='blast-wave').length)).toBe(0);await expect.poll(()=>state(page,g=>g.renderer.info.memory.geometries)).toBeLessThanOrEqual(baseline+2);expect(errors).toEqual([]);
 });

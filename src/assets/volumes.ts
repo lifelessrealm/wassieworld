@@ -1,5 +1,5 @@
 import {canonicalData} from './canonical-data.ts';
-import {characterParts,SOURCE_SCALE} from './character.ts';
+import {characterParts,SOURCE_SCALE,characterDepthOffset} from './character.ts';
 export type Vec = [number, number, number];
 export type Primitive = { shape: 'ellipsoid' | 'box'; center: Vec; size: Vec; color: string };
 export type Volume = { id: string; size: Vec; resolution: number; depthResolution?:number; layers: number; parts: Primitive[]; reference?:keyof typeof canonicalData };
@@ -20,7 +20,7 @@ export const volumes: Record<string, Volume> = {
   tesla: volume('tesla',[.84,1.4,.84],[b([0,-.57,0],[.39,.1,.39],'#384c49'),b([0,-.05,0],[.15,.46,.15],'#ab7e52'),...[-.3,-.1,.1,.3].map(y=>e([0,y,0],[.25,.045,.25],steel)),e([0,.49,0],[.36,.18,.36],'#a2c9c4')])
 };
 // All six profiles retain the same source-pixel/world ratio and joint space.
-for(const p of characterParts){const [l,t,r,b]=p.crop;volumes[p.asset]={...volume(p.asset,[(r-l)*SOURCE_SCALE,(b-t)*SOURCE_SCALE,p.depth],[],p.layers,canonicalData[p.id].width),depthResolution:32,reference:p.id};}
+for(const p of characterParts){const [l,t,r,b]=p.crop;volumes[p.asset]={...volume(p.asset,[(r-l)*SOURCE_SCALE,(b-t)*SOURCE_SCALE,p.depth],[],p.layers,canonicalData[p.id].width),depthResolution:64,reference:p.id};}
 type Profile={width:number;height:number;bytes:Uint8Array;distance:Uint8Array;colors:string[];front:Float32Array;back:Float32Array;frontNormals:Float32Array;backNormals:Float32Array};
 const profiles=new Map<string,Profile>();
 const headRelief=characterParts.find(part=>part.id==='head')!.relief;
@@ -36,10 +36,21 @@ function getProfile(key:keyof typeof canonicalData){
   let l=0,r=0,total=0;for(let row=Math.max(0,y-3);row<=Math.min(d.height-1,y+3);row++){if(bounds[row][0]>bounds[row][1])continue;const weight=4-Math.abs(row-y);l+=bounds[row][0]*weight;r+=bounds[row][1]*weight;total+=weight;}l/=total||1;r/=total||1;
   const t=(x-(l+r)/2)/Math.max(1,(r-l)/2);
   const round=Math.sqrt(Math.max(0,1-t*t));
-  const endTaper=key==='head'?(.2+.8*Math.sqrt(Math.max(0,1-((v-.48)/.54)**2))):key.includes('Foot')?(.64+.36*Math.sin(Math.PI*v)):(.45+.55*Math.sin(Math.PI*v)**.35);
+  // A closed lenticular cross-section curves BOTH sides. The old constant front
+  // plane left a conspicuous straight cut down the entire side silhouette.
+  const endTaper=key==='head'?Math.min(1,Math.sqrt(Math.max(0,1-((v-.48)/.49)**2))+.3*bump(u,v,.5,1,.9,.14)):key.includes('Foot')?(.64+.36*Math.sin(Math.PI*v)):(.64+.36*Math.sin(Math.PI*v)**.65);
+  const contour=.04+.96*round*endTaper;
+  const bulk=size[2]-spec.relief,base=size[2]/2-spec.relief;
+  const centerShift=key==='head'?-.09*bump(u,v,.5,.3,.7,.4)+.09*bump(u,v,.5,.94,.7,.2):key==='torso'?-.05*bump(u,v,.5,.72,.7,.35):0;
   const relief=key==='head'?Math.max(dome(u,v,.49,.416,.177,.168),dome(u,v,.814,.416,.143,.16),dome(u,v,.62,.82,.37,.065)*.65):bump(u,v,.52,.55,.4,.55)*.5;
-  front[i]=size[2]/2-spec.relief+spec.relief*relief-.012*(1-Math.min(1,distance[i]/3));
-  back[i]=size[2]/2-spec.relief-(size[2]-spec.relief)*endTaper*(.12+.88*round);
+  front[i]=base-bulk*.46*(1-contour)+centerShift+spec.relief*relief;
+  back[i]=base-bulk*.46-bulk*.54*contour+centerShift;
+  if(key==='leftArm'||key==='rightArm'){
+   const torso=getProfile('torso'),body=characterParts[0],sx=spec.crop[0]+u*(spec.crop[2]-spec.crop[0]),sy=spec.crop[1]+v*(spec.crop[3]-spec.crop[1]);
+   const tx=Math.max(0,Math.min(torso.width-1,Math.floor((sx-body.crop[0])/(body.crop[2]-body.crop[0])*torso.width))),ty=Math.max(0,Math.min(torso.height-1,Math.floor((sy-body.crop[1])/(body.crop[3]-body.crop[1])*torso.height)));
+   const skin=torso.front[ty*torso.width+tx]+characterDepthOffset('torso')-characterDepthOffset(spec.asset);
+   front[i]=skin+.012+.035*round;back[i]=front[i]-(.025+.24*round);
+  }
  }
  const at=(data:Float32Array,x:number,y:number)=>data[Math.max(0,Math.min(d.height-1,y))*d.width+Math.max(0,Math.min(d.width-1,x))];
  for(let y=0;y<d.height;y++)for(let x=0;x<d.width;x++)for(const [field,normals,sign]of [[front,frontNormals,1],[back,backNormals,-1]] as const){
@@ -50,22 +61,25 @@ function getProfile(key:keyof typeof canonicalData){
 }
 /** Exposes the coherent front/back envelope for collider/decal QA, in local volume space. */
 export function characterEnvelope(asset:string,u:number,v:number){const volume=volumes[asset];if(!volume?.reference)return null;const p=getProfile(volume.reference),x=Math.max(0,Math.min(p.width-1,Math.floor(u*p.width))),y=Math.max(0,Math.min(p.height-1,Math.floor(v*p.height))),i=y*p.width+x;if(!p.bytes[i*4+3])return null;return {front:p.front[i],back:p.back[i]};}
-function referenceSample(v:Volume,point:Vec):{color:string;normal:Vec}|null{
+function referenceSample(v:Volume,point:Vec):{color:string;normal:Vec;edgeInk?:number;sideColor?:string}|null{
  const p=getProfile(v.reference!),x=Math.floor((point[0]/v.size[0]+.5)*p.width),y=Math.floor((.5-point[1]/v.size[1])*p.height);
  if(x<0||x>=p.width||y<0||y>=p.height)return null;const i=(y*p.width+x)*4;if(!p.bytes[i+3])return null;
  const cell=y*p.width+x,front=p.front[cell],back=p.back[cell];if(point[2]>front||point[2]<back)return null;
  const isFront=front-point[2]<point[2]-back,normals=isFront?p.frontNormals:p.backNormals,n=cell*3;
  const painted=point[2]>front-v.size[2]/(v.depthResolution??v.resolution)*1.1;
- let color=painted?p.colors[cell]:green;
- if(!painted&&v.id==='head'){
+ let sideColor=green;
+ if(v.id==='head'){
   const u=(x+.5)/p.width,t=(y+.5)/p.height,base=v.size[2]/2-headRelief;
   const eye=Math.min(((u-.49)/.177)**2+((t-.416)/.168)**2,((u-.814)/.143)**2+((t-.416)/.16)**2);
-  if(eye<1&&point[2]>base+.025)color='#f6f4e9';
-  if(((u-.62)/.37)**2+((t-.82)/.065)**2<1&&point[2]>base+.02)color='#ad6a54';
+  if(eye<1&&point[2]>base-.12)sideColor='#f6f4e9';
+  if(((u-.62)/.37)**2+((t-.82)/.065)**2<1&&point[2]>base-.12)sideColor='#ad6a54';
  }
- if(!painted&&v.id.toLowerCase().includes('foot'))color=p.distance[cell]<2?'#233124':'#efefdf';
- if(!painted&&v.id==='head'){const u=(x+.5)/p.width,t=(y+.5)/p.height;if(Math.abs(t-(.23+.1*(u-.5)**2))<.007&&u>.18&&u<.82)color='#496e32';}
- return {color,normal:[normals[n],normals[n+1],normals[n+2]]};
+ if(v.id.toLowerCase().includes('foot'))sideColor='#efefdf';
+ const color=painted?p.colors[cell]:sideColor;
+ // Original silhouette ink and antialiasing belong to the supplied frontal
+ // drawing. Fade that narrow rim toward the surface material when viewed from
+ // the side, rather than stretching it into a black/white seam around the body.
+ return {color,sideColor,normal:[normals[n],normals[n+1],normals[n+2]],edgeInk:painted&&p.distance[cell]<5?1:0};
 }
 
 export function distance(p: Vec, part: Primitive): number {
@@ -73,7 +87,7 @@ export function distance(p: Vec, part: Primitive): number {
   if (part.shape==='ellipsoid') return (Math.hypot(...q.map((v,i)=>v/part.size[i]))-1)*Math.min(...part.size);
   return Math.max(...q.map((v,i)=>v-part.size[i]));
 }
-export function sample(v: Volume,p: Vec): {color:string;normal:Vec}|null {
+export function sample(v: Volume,p: Vec): {color:string;normal:Vec;edgeInk?:number;sideColor?:string}|null {
   if(v.reference)return referenceSample(v,p);
   // Ordered CSG paint volumes: later shapes color the interior of their intersection.
   let found: Primitive|undefined;
@@ -86,13 +100,14 @@ export function sample(v: Volume,p: Vec): {color:string;normal:Vec}|null {
 }
 export function compileVolume(v: Volume) {
   const cols=8, rows=Math.ceil(v.layers/cols), depthResolution=v.depthResolution??v.resolution,width=v.resolution*cols, height=depthResolution*rows;
-  const color=new Uint8Array(width*height*4), normals=new Uint8Array(width*height*4); let occupied=0;
+  const color=new Uint8Array(width*height*4),sideColors=new Uint8Array(width*height*4), normals=new Uint8Array(width*height*4),edgeInk=new Uint8Array(width*height); let occupied=0;
   for(let y=0;y<v.layers;y++) for(let z=0;z<depthResolution;z++) for(let x=0;x<v.resolution;x++) {
     const p:Vec=[((x+.5)/v.resolution-.5)*v.size[0],((y+.5)/v.layers-.5)*v.size[1],((z+.5)/depthResolution-.5)*v.size[2]];
     const s=sample(v,p); if(!s) continue;
     const i=(((Math.floor(y/cols)*depthResolution+z)*width)+(y%cols)*v.resolution+x)*4;
     const c=parseInt(s.color.slice(1),16);color.set([c>>16,(c>>8)&255,c&255,255],i);
-    normals.set([...s.normal.map(n=>Math.round((n*.5+.5)*255)),255],i); occupied++;
+    const side=parseInt((s.sideColor??s.color).slice(1),16);sideColors.set([side>>16,(side>>8)&255,side&255,255],i);
+    normals.set([...s.normal.map(n=>Math.round((n*.5+.5)*255)),255],i);edgeInk[i/4]=s.edgeInk??0; occupied++;
   }
-  return {color,normals,width,height,occupied,metadata:{id:v.id,size:v.size,layers:v.layers,resolution:v.resolution,depthResolution,tileSize:[v.resolution,depthResolution],columns:cols,rows,spacing:v.size[1]/v.layers,pivot:[0,0,0],axis:'Y',filter:'nearest',source:`src/assets/volumes.ts#${v.id}`}};
+  return {color,sideColors,normals,edgeInk,width,height,occupied,metadata:{id:v.id,size:v.size,layers:v.layers,resolution:v.resolution,depthResolution,tileSize:[v.resolution,depthResolution],columns:cols,rows,spacing:v.size[1]/v.layers,pivot:[0,0,0],axis:'Y',filter:'nearest',source:`src/assets/volumes.ts#${v.id}`}};
 }

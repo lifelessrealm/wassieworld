@@ -1,66 +1,59 @@
-# Verification — side/rear volume and natural reactions, 2026-11-21
+# Verification — rounded anatomy, cursor tools and recovery, 2026-11-21
 
-Story: inspect Wassie's rounded side/rear anatomy while preserving the supplied front drawing → grab/throw the articulated body → measured contact location, speed and mass drive the reaction → damage remains attached to the struck part/surface → the character settles on actual support before recovering.
+Story: inspect Wassie from front/side/rear → select mallet or glove → hold and sweep the cursor through the dynamic puppet → release without leaving a placed item → settle and recover through the torso; place a bomb → a wider blast pushes bodies, chains bombs and disposes its graphics.
 
-The existing ten-tool catalog is unchanged. This is a local browser simulation with no API/database or secret configuration boundary.
+The ten-item catalog is unchanged. All behavior is local to the browser; there is no API, database, credential or server data boundary.
 
-## Checks performed
+## Actual checks
 
-| Check | Observed result |
+| Check | Result |
 | --- | --- |
-| `npm test` | 30 passing system tests |
-| `npm run assets` | 16 coherent volumes exported; 386 production requirements indexed |
-| `npm run build` | TypeScript and production Vite build passed |
-| `npm run test:e2e` | Seven passing Chrome browser tests, 44.1 seconds |
-| `node scripts/production-smoke.mjs` | Production browser loads, bomb scores, no debug API or browser errors |
-| `node scripts/compare-reference.mjs` | Front comparison passes the existing fidelity gate |
-| `node scripts/character-qa.mjs` | No page or console errors in the captured studio/reaction flows |
-| `node scripts/turnaround-qa.mjs` | Eight actual rendered anatomy/surface-reaction views captured |
+| npm test | 36 passing system tests, 4.44 seconds |
+| npm run assets | 16 coherent source volumes exported; 386 requirements indexed |
+| npm run build | TypeScript and Vite production build passed |
+| npm run test:e2e | 10 Chrome browser tests passed, 1.5 minutes |
+| node scripts/production-smoke.mjs | Production cursor-tool lifecycle, bomb scoring, ten-item catalog, no debug API and no browser errors |
+| node scripts/compare-reference.mjs | Existing front fidelity gate passed |
+| node scripts/turnaround-qa.mjs | Eight actual rendered views captured with no console/page errors |
+| node scripts/profile.mjs | Hardware sample below; finite positions under 40-prop stress, no console/page errors |
 
-## Preserved canonical front
+Browser verification initially caught a missing fragment-shader varying in the new side lighting. Both shader stages now declare it. The production build and complete browser suite were rerun after the fix; the table records those final results.
 
-Actual isolated Three.js render compared with the unchanged source crop at **398×782**:
+## Character source and visual inspection
 
-- Foreground intersection-over-union: **0.9872874**.
-- Mean absolute RGB channel error over shared foreground: **4.98364 / 255**.
-- Existing regression thresholds remain **0.975** minimum IoU and **12/255** maximum channel error.
+The original PNG remains unchanged. Both front and back envelopes curve, with a 1.48m-deep head, 1.12m-deep torso and 64 depth samples. The crown and neck taper; the torso has continuous skin beneath traced arms. Arm envelopes overlap the underlying torso instead of opening a gap at quarter views. Source ink near the silhouette blends to appropriate surface materials at oblique angles; volume lighting describes the sides and back.
 
-This is a foreground metric excluding near-white pixels, not a filled silhouette or perceptual identity score. It covers the supplied neutral front view. Side/rear forms are authored interpretations of one reference, not additional supplied canonical art. They require artistic review before final all-angle approval.
+Isolated actual Three.js render at 398×782:
 
-## Volume and reaction checks
+- Foreground intersection-over-union: **0.9873685637**.
+- Mean absolute RGB channel error: **5.29070398 / 255**.
+- Existing thresholds remain IoU ≥ 0.975 and error ≤ 12 / 255.
 
-The source-envelope tests verify substantive head/torso depth, rounded cross-sections, continuous occupied depth intervals, outward rear normals, eye/lip relief and skin-colored rear surfaces without mirrored facial features. Front landmark colors and one common source-pixel/world scale remain covered.
+The metric excludes near-white pixels and covers the supplied neutral front. It is not a perceptual identity score or all-angle certification. Side and rear anatomy is an authored interpretation of the single reference and still needs artistic review. Actual turnaround, side/rear wounds, frost, combined effects, cursor strikes and bomb shockwave screenshots were inspected. Slice stepping and some oblique seams remain visible at close inspection.
 
-Physics regressions verify limited joints under repeated torque, planar articulation, long spring grabs, bounded release speed, landing reaction spacing, return to stance, idle stability, one damage episode per explosion, platform-height recovery, and unassisted airborne falling. The raised-platform test confirms recovery does not pull the body through its support. The freefall test measures center-of-mass motion against gravity before ground contact. Zero gravity, status interactions, resets, saves, prop budgets and mixed-tool stress remain covered.
+## Cursor and physics coverage
 
-Reaction tests verify reduced-mass/speed-sensitive response, bounded measured impulse, separate front/back/flank marks, retained limb identity and continuous deformation when a new impact arrives. Opposite contact normals describe the same compression axis, avoiding a half-turn of squash after landing. Damped spring integration agrees across tested tick rates.
+The system tests verify that mallet and glove are single dynamic held tools with one cursor body and one spring; held tools do not enter saves. Repeated creation/release returns to six bodies and five rig joints. Collider displacement is bounded under a sudden cursor target change. Faster sweeps produce stronger measured contacts than slow sweeps for both tools. Hammer collisions use its head; the glove uses a rounded fist collider.
 
-## Browser and visual checks
+Browser tests use actual mouse input to strike with each tool, check scoring, verify empty prop saves, release and select a different tool. Touch emulation exercises a held glove and touch cancellation. Existing placement/grab/throw, pause/time scale, save/load, reset, slice reconstruction and studio tests continue to pass. Idle loading makes no external HTTP requests.
 
-Seven tests exercise desktop and touch placement/grabbing, pause/time scale, search, bomb scoring, save/clear/load, reset, screenshots, partial slices, reference comparison, side/rear wound presets and combined effects. Repeated studio resets do not grow renderer geometry counts beyond the tested tolerance. The tested idle flow issues **no external HTTP requests**; both existing Latin variable fonts are now local, with their OFL licenses bundled.
+Recovery tests cover raised platforms, quiet freefall, zero gravity, joint limits, repeated grabs and post-impact return to stance. A real cursor hammer hit is followed for 30 simulated seconds: settling, rising and standing occur, damage clears, and torso height changes by less than 0.04m per fixed step while rising. Torso lifting and gradual angle targets replace independent position pulls on all six parts; the other parts follow joint springs. A gentle held contact delays recovery without farming damage.
 
-Desktop viewport is 1440×1000. Touch-emulated Chrome uses 390×844 with CDP touch start/move/end. There is no horizontal overflow in that tested layout. Physical Android/iOS devices, Safari and Firefox remain untested.
-
-The turnaround sheet shows engine-rendered front, quarter, side and rear anatomy; side and rear wounds; frost on the back; and combined effects on the opposite flank. Decals reuse volume geometry and orbiting stars have depth. The side/rear view is no longer a shallow card, but it is still a stylized inferred model rather than a final approved turnaround.
+The bomb now has a 5.6m radius (previously 3.8m), greater central impulse, smooth falloff and bounded single-episode character damage. Tests verify response at 4.5m, no response beyond radius, diminishing force and chain fuses within the expanded radius. Browser tests verify a visible shockwave and repeated blasts returning renderer geometry counts to baseline tolerance. Blast groups are capped at four; the 40-prop / 100-particle budgets remain. Reduced motion suppresses shake and expanding flash/ring motion.
 
 ## Hardware sample
 
-Chrome, **NVIDIA GeForce RTX 3080 Ti**, ANGLE Direct3D11, **1440×1000**:
+Chrome, NVIDIA GeForce RTX 3080 Ti, ANGLE Direct3D11, 1440×1000:
 
 | Scene | FPS sampled | Draws | Triangles | Bodies | Physics time sampled |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Idle refined volume | 144 | 17 | 353,340 | 6 | 0.3 ms |
-| 40 mixed crate/mallet/anvil/glove props | 144 | 99 | 1,475,588 | 46 | 0.6 ms |
+| Idle | 144 | 17 | 477,088 | 6 | 0.3ms |
+| 40 mixed props | 144 | 99 | 1,692,532 | 46 | 0.7ms |
 
-Coordinates remained finite. These are short local samples, not percentile benchmarks, thermal tests or proof of performance on lower-end devices. Browser tests use software WebGL for compatibility coverage; that is separate from the hardware sample.
+These are short local samples, not percentile benchmarks or lower-end/mobile performance certification. Browser tests separately use software WebGL. Touch emulation uses 390×844; physical phones, Safari and Firefox remain untested.
 
-## Remaining limits
+## Build and delivery limits
 
-- Inferred side/rear anatomy and extreme deformation transitions still need visual approval and tuning.
-- The character application chunk is roughly 92 KB gzipped, the renderer about 137 KB, and the embedded Rapier WASM/compatibility chunk about 830 KB. Vite warns about uncompressed chunk sizes; the build passes.
-- Rapier emits an upstream compatibility initialization warning. Tested initialization and simulation work.
-- `dist/` is ready for static hosting, but no Vercel deployment was performed.
-- Prior hosted CI runs could not start because of the GitHub account billing lock. Local checks pass; no hosted CI pass is claimed.
-- Saves remain prop placements, not simulation checkpoints. Replay, challenges, leaderboard and bulk content remain planned.
+The application chunk is about 95KB gzipped, renderer 138KB and embedded Rapier compatibility/WASM 830KB. Vite's uncompressed chunk-size warning remains; the build passes. Rapier also emits its existing compatibility initialization warning. Source and static production archives plus current screenshots and this report are copied to local outputs. No Vercel deployment was performed.
 
-Screenshots and measured front results are under `test-results/character/`. Source/production archives, the turnaround sheet, comparison images and this report are copied to local deliverable outputs.
+Prior GitHub Actions runs could not start because of the account billing lock. Local checks pass; no hosted CI pass is claimed. Saves remain versioned prop placements, not simulation checkpoints. Legacy placed hammer/glove entries still load through the prop path; new pointer interactions use held tools.

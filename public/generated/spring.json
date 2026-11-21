@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#spring",
   "occupiedVoxels": 32148,
   "colorAtlas": "spring-color.png",
-  "normalAtlas": "spring-normal.png"
+  "normalAtlas": "spring-normal.png",
+  "sideMaterialAtlas": "spring-side.png"
 }

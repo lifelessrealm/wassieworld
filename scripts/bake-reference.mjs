@@ -16,12 +16,13 @@ for(const part of characterParts){
   if(exterior[sy*png.width+sx])continue;
   const leftArm=inside(sx,sy,armMasks.leftArm),rightArm=inside(sx,sy,armMasks.rightArm);
   if(part.id==='leftArm'&&!leftArm||part.id==='rightArm'&&!rightArm)continue;
-  // Head overlaps the neck by 20 source pixels; the torso owns no duplicate arms.
-  if(part.id==='torso'&&(leftArm||rightArm))continue;
   bytes.set(png.data.subarray(i,i+4),j);
+  // Continuous skin beneath the articulated arms avoids two detached flaps at
+  // quarter views. The arms own the source ink; the underlying hull is green.
+  if(part.id==='torso'&&(leftArm||rightArm))bytes.set([94,142,61,255],j);
  }
  // Four-neighbour inward distance supports a small consistent bevel, independent
- // of each row's width. Unlike cylindrical wrapping, the front art stays planar.
+ // of each row's width. The envelope authoring supplies the curved front/back.
  const distance=new Uint16Array(width*height);distance.fill(65500);
  for(let y=0;y<height;y++)for(let x=0;x<width;x++){const i=y*width+x;if(!bytes[i*4+3])distance[i]=0;else distance[i]=Math.min(distance[i],x?distance[i-1]+1:1,y?distance[i-width]+1:1);}
  for(let y=height-1;y>=0;y--)for(let x=width-1;x>=0;x--){const i=y*width+x;distance[i]=Math.min(distance[i],x<width-1?distance[i+1]+1:1,y<height-1?distance[i+width]+1:1);}

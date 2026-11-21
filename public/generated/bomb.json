@@ -25,5 +25,6 @@
   "source": "src/assets/volumes.ts#bomb",
   "occupiedVoxels": 38580,
   "colorAtlas": "bomb-color.png",
-  "normalAtlas": "bomb-normal.png"
+  "normalAtlas": "bomb-normal.png",
+  "sideMaterialAtlas": "bomb-side.png"
 }

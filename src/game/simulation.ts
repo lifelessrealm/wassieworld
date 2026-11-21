@@ -5,16 +5,18 @@ import {DamageState,Score} from './damage.ts';
 import {characterParts,bindPosition,sourcePosition,partForAsset,characterDepthOffset,type RigPart} from '../assets/character.ts';
 import {angleDelta,clamp,impactStrength,jointRestImpulse} from './rig-physics.ts';
 export const STEP=1/120, MAX_PROPS=40;
-export type Entity={id:number;asset:string;body:RAPIER.RigidBody;collider:RAPIER.Collider;part:boolean;rigPart?:RigPart;tool?:Tool;age:number;fuse:number;cooldown:number;previous:{x:number;y:number;z:number};previousRotation:RAPIER.Quaternion;previousVelocity:{x:number;y:number;z:number};previousSpin:number};
+export type Entity={id:number;asset:string;body:RAPIER.RigidBody;collider:RAPIER.Collider;part:boolean;held?:boolean;rigPart?:RigPart;tool?:Tool;age:number;fuse:number;cooldown:number;previous:{x:number;y:number;z:number};previousRotation:RAPIER.Quaternion;previousVelocity:{x:number;y:number;z:number};previousSpin:number};
 export type GameEvent={type:'impact'|'blast'|'freeze'|'shock'|'launch'|'recovery';position:Vec;strength:number;points:number;direction?:Vec};
 export type Setup={version:1;props:{asset:string;x:number;y:number;angle:number}[]};
 export class Simulation {
  world:RAPIER.World;events:RAPIER.EventQueue;entities:Entity[]=[];damage=new DamageState();score=new Score();elapsed=0;gravity=9.81;
  private nextId=1;private contacts=new Map<string,number>();private byCollider=new Map<number,Entity>();private interacted=false;private impactCooldown=0;
  private grab?:{cursor:RAPIER.RigidBody;joint:RAPIER.ImpulseJoint;target:Vec;entity:Entity};
+ private swing?:{cursor:RAPIER.RigidBody;joint:RAPIER.ImpulseJoint;target:Vec;entity:Entity;angle:number};
  readonly rigJoints:RAPIER.RevoluteImpulseJoint[]=[];
  private recoveryX=0;private needsRecoveryAnchor=false;private lastDamageSequence=0;private airborneTime=0;
  private supportUntil=0;private supportY=0;
+ private recoveryTime=0;private recoveryHeight=0;private recoveryAngle=0;private recoveryDuration=.65;
  poseState:'held'|'airborne'|'settling'|'rising'|'standing'|'stunned'='settling';
  onEvent:(event:GameEvent)=>void=()=>{};
  constructor(){
@@ -30,7 +32,7 @@ export class Simulation {
   const child=part&&asset!=='torso';
   const desc=(fixed?RAPIER.RigidBodyDesc.fixed():RAPIER.RigidBodyDesc.dynamic()).setTranslation(x,y,0).setLinearDamping(.18).setAngularDamping(.8).setCcdEnabled(true).enabledTranslations(true,true,child).enabledRotations(child,child,true);
   const body=this.world.createRigidBody(desc);
-  const shape=asset==='bomb'?RAPIER.ColliderDesc.ball(.38):part?RAPIER.ColliderDesc.roundCuboid(size[0]*.4,size[1]*.43,size[2]*.35,.04):RAPIER.ColliderDesc.cuboid(size[0]*.45,size[1]*.47,size[2]*.45);
+  const shape=asset==='bomb'?RAPIER.ColliderDesc.ball(.38):asset==='mallet'?RAPIER.ColliderDesc.roundCuboid(.54,.26,.27,.025).setTranslation(0,.38,0):asset==='glove'?RAPIER.ColliderDesc.ball(.4).setTranslation(0,.1,0):part?RAPIER.ColliderDesc.roundCuboid(size[0]*.4,size[1]*.43,size[2]*.35,.04):RAPIER.ColliderDesc.cuboid(size[0]*.45,size[1]*.47,size[2]*.45);
   const collider=this.world.createCollider(shape.setMass(mass).setFriction(part?.75:.6).setRestitution(part?.18:.25).setCollisionGroups(part?0x00010002:0x00020003).setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS).setContactForceEventThreshold(120),body);
   const entity:Entity={id:this.nextId++,asset,body,collider,part,age:0,fuse:2.8,cooldown:0,previous:{...body.translation()},previousRotation:{...body.rotation()},previousVelocity:{x:0,y:0,z:0},previousSpin:0};
   this.entities.push(entity);this.byCollider.set(collider.handle,entity);return entity;
@@ -46,7 +48,7 @@ export class Simulation {
  }
  spawn(id:string,x=2,y=5):Entity|null{
   const tool=toolById(id);if(!tool)throw Error(`Unknown tool: ${id}`);
-  if(this.entities.filter(e=>!e.part).length>=MAX_PROPS)return null;
+  if(this.entities.filter(e=>!e.part&&!e.held).length>=MAX_PROPS)return null;
   if(!Number.isFinite(x)||!Number.isFinite(y))throw Error('Invalid spawn coordinates');
   const half=volumes[id].size[1]/2;
   const e=this.entity(id,Math.max(-7.8,Math.min(7.8,x)),tool.fixed?half+.03:Math.max(half+.1,Math.min(8.5,y)),false,tool.mass,tool.fixed);
@@ -54,9 +56,9 @@ export class Simulation {
  }
  private emit(type:GameEvent['type'],e:Entity,strength:number,key:string){const p=e.body.translation();const points=this.score.event(key,strength);this.onEvent({type,position:[p.x,p.y,p.z],strength,points});}
  blast(e:Entity){
-  const p=e.body.translation();this.emit('blast',e,18,`blast-${e.id}`);
+  const p=e.body.translation();this.emit('blast',e,30,`blast-${e.id}`);
   let strongest=0;
-  for(const other of this.entities){if(other===e)continue;const q=other.body.translation(),dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d>3.8)continue;const power=(1-d/3.8)*17;
+  for(const other of this.entities){if(other===e)continue;const q=other.body.translation(),dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d>5.6)continue;const power=(1-d/5.6)**1.2*25;
    if(other.tool?.behavior==='explosive')other.fuse=Math.min(other.fuse,.08);
    const mass=other.part?other.body.mass()*.65:1;
    if(!other.body.isFixed())other.body.applyImpulse({x:dx/(d||1)*power*mass,y:(dy/(d||1)+.65)*power*mass,z:0},true);
@@ -65,9 +67,9 @@ export class Simulation {
   if(strongest>0){this.damage.hit(strongest);this.damage.add('soot',7);this.impactCooldown=.12;}
   this.remove(e);
  }
- remove(e:Entity){if(this.grab?.entity===e)this.release();this.byCollider.delete(e.collider.handle);this.world.removeRigidBody(e.body);this.entities=this.entities.filter(x=>x!==e);}
+ remove(e:Entity){if(this.swing?.entity===e){this.endSwing();return;}if(this.grab?.entity===e)this.release();this.byCollider.delete(e.collider.handle);this.world.removeRigidBody(e.body);this.entities=this.entities.filter(x=>x!==e);}
  beginGrab(e:Entity,point:Vec){
-  this.release();if(e.body.isFixed()||!point.every(Number.isFinite))return;this.interacted=true;this.damage.quiet=0;this.needsRecoveryAnchor=true;
+  this.endSwing();this.release();if(e.body.isFixed()||!point.every(Number.isFinite))return;this.interacted=true;this.damage.quiet=0;this.needsRecoveryAnchor=true;
   const p=e.body.translation(),q=e.body.rotation();const dx=point[0]-p.x,dy=point[1]-p.y;const angle=2*Math.atan2(q.z,q.w);
   const anchor={x:dx*Math.cos(angle)+dy*Math.sin(angle),y:-dx*Math.sin(angle)+dy*Math.cos(angle),z:0};
   const cursor=this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(point[0],point[1],0));
@@ -77,6 +79,19 @@ export class Simulation {
  moveGrab(point:Vec){if(this.grab&&point.every(Number.isFinite))this.grab.target=[Math.max(-8,Math.min(8,point[0])),Math.max(.15,Math.min(9,point[1])),0];}
  release(){if(!this.grab)return;this.world.removeImpulseJoint(this.grab.joint,true);this.world.removeRigidBody(this.grab.cursor);this.grab=undefined;}
  get grabbing(){return !!this.grab;}
+ /** One dynamic tool attached at its handle; the cursor never teleports a collider. */
+ beginSwing(id:string,point:Vec){
+  this.endSwing();this.release();const tool=toolById(id);if(!tool?.held||!point.every(Number.isFinite))return;
+  const anchorY=id==='mallet'?-.62:-.28;
+  const e=this.entity(id,point[0],point[1]-anchorY,false,tool.mass);e.tool=tool;e.held=true;e.collider.setRestitution(tool.restitution);e.body.setGravityScale(0,true);
+  const cursor=this.world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(point[0],point[1],0));
+  const joint=this.world.createImpulseJoint(RAPIER.JointData.spring(0,id==='mallet'?700:520,id==='mallet'?80:48,{x:0,y:anchorY,z:0},{x:0,y:0,z:0}),e.body,cursor,true);
+  this.swing={cursor,joint,target:[...point],entity:e,angle:0};this.interacted=true;
+ }
+ moveSwing(point:Vec){if(this.swing&&point.every(Number.isFinite))this.swing.target=[clamp(point[0],-8,8),clamp(point[1],.3,8.5),0];}
+ endSwing(){if(!this.swing)return;const {joint,cursor,entity}=this.swing;this.swing=undefined;this.world.removeImpulseJoint(joint,true);this.world.removeRigidBody(cursor);this.remove(entity);}
+ get swinging(){return !!this.swing;}
+ get heldTool(){return this.swing?.entity;}
  get grounded(){return this.elapsed<this.supportUntil;}
  private updateSupport(){
   let height=-Infinity;
@@ -97,8 +112,9 @@ export class Simulation {
   this.airborneTime=this.grounded?0:this.airborneTime+dt;
   if(this.airborneTime>.5||this.damage.sequence!==this.lastDamageSequence)this.needsRecoveryAnchor=true;this.lastDamageSequence=this.damage.sequence;
   const speed=Math.hypot(torso.body.linvel().x,torso.body.linvel().y),stunned=this.damage.statuses.has('frozen')||this.damage.statuses.has('shocked');
-  const recovering=!this.grab&&this.gravity>0&&!stunned&&this.grounded&&this.damage.quiet>2.8&&this.damage.amount<65&&speed<2.2;
-  const blend=recovering?Math.min(1,(this.damage.quiet-2.8)/1.5):0;
+  const recovering=!this.grab&&this.gravity>0&&!stunned&&this.grounded&&this.damage.quiet>2.8&&this.damage.amount<65&&speed<(this.recoveryTime>0?3:1.8);
+  if(recovering){if(this.recoveryTime===0){this.recoveryDuration=this.needsRecoveryAnchor?2.2:.65;this.recoveryHeight=torso.body.translation().y;const q=torso.body.rotation();this.recoveryAngle=angleDelta(2*Math.atan2(q.z,q.w));}this.recoveryTime+=dt;}else this.recoveryTime=0;
+  const phase=Math.min(1,this.recoveryTime/this.recoveryDuration),blend=phase*phase*(3-2*phase);
   this.poseState=this.grab?'held':stunned?'stunned':!this.grounded?'airborne':blend>0?(blend>.98&&speed<.3?'standing':'rising'):'settling';
   if(recovering&&this.needsRecoveryAnchor){this.recoveryX=torso.body.translation().x;this.needsRecoveryAnchor=false;}
   for(const e of this.entities){e.previous={...e.body.translation()};e.previousRotation={...e.body.rotation()};e.previousVelocity={...e.body.linvel()};e.previousSpin=e.body.angvel().z;e.age+=dt;e.cooldown=Math.max(0,e.cooldown-dt);
@@ -106,12 +122,15 @@ export class Simulation {
     e.body.setLinearDamping(this.damage.statuses.has('frozen')?6:.18);
     // Blend into a supported bind pose after a quiet moment, keeping bodies dynamic.
     const p=e.body.translation();
-    if(e!==torso){const q=e.body.rotation(),tq=torso.body.rotation(),relative=2*Math.atan2(q.z,q.w)-2*Math.atan2(tq.z,tq.w),impulse=jointRestImpulse(relative,e.body.angvel().z-torso.body.angvel().z,e.body.principalInertia().z,stunned?5:e.rigPart==='head'?3:2,dt);e.body.applyTorqueImpulse({x:0,y:0,z:impulse},true);torso.body.applyTorqueImpulse({x:0,y:0,z:-impulse},true);}
+    if(e!==torso){const q=e.body.rotation(),tq=torso.body.rotation(),relative=2*Math.atan2(q.z,q.w)-2*Math.atan2(tq.z,tq.w),impulse=jointRestImpulse(relative,e.body.angvel().z-torso.body.angvel().z,e.body.principalInertia().z,stunned?5:(e.rigPart==='head'?3:2)+blend*3,dt);e.body.applyTorqueImpulse({x:0,y:0,z:impulse},true);torso.body.applyTorqueImpulse({x:0,y:0,z:-impulse},true);}
     if(blend>0){
      const q=e.body.rotation(),angle=2*Math.atan2(q.z,q.w),velocity=e.body.linvel();
      const spec=partForAsset(e.asset)!,[offset,targetY]=bindPosition(spec);
-     e.body.applyImpulse({x:clamp((this.recoveryX+offset-p.x)*18-velocity.x*8,-18,18)*e.body.mass()*dt*blend,y:(clamp((targetY+this.supportY-p.y)*24-velocity.y*9,-18,18)+this.gravity)*e.body.mass()*dt*blend,z:0},true);
-     const inertia=e.body.principalInertia().z,torque=clamp(-angleDelta(angle)*49-e.body.angvel().z*14,-30,30)*inertia;
+     // Lift through the torso rather than pulling six bodies independently into
+     // place. The joint springs let the head and limbs follow with natural lag.
+     if(e===torso){const mass=characterParts.reduce((sum,part)=>sum+part.mass,0),height=this.recoveryHeight+(targetY+this.supportY-this.recoveryHeight)*blend;
+      e.body.applyImpulse({x:clamp((this.recoveryX+offset-p.x)*12-velocity.x*7,-12,12)*mass*dt*blend,y:(clamp((height-p.y)*18-velocity.y*8,-16,16)+this.gravity)*mass*dt*blend,z:0},true);}
+     const targetAngle=this.recoveryAngle*(1-blend),inertia=e.body.principalInertia().z,torque=clamp(-angleDelta(angle-targetAngle)*36-e.body.angvel().z*12,-24,24)*inertia;
      e.body.applyTorqueImpulse({x:0,y:0,z:torque*dt*blend},true);
     }
    }
@@ -119,6 +138,12 @@ export class Simulation {
    const v=e.body.linvel(),speed=Math.hypot(v.x,v.y);if(speed>26)e.body.setLinvel({x:v.x/speed*26,y:v.y/speed*26,z:0},true);const spin=e.body.angvel().z;if(Math.abs(spin)>18)e.body.setAngvel({x:0,y:0,z:Math.sign(spin)*18},true);
   }
   if(this.grab){const p=this.grab.cursor.translation(),target=this.grab.target;const dx=target[0]-p.x,dy=target[1]-p.y,d=Math.hypot(dx,dy),f=Math.min(1-Math.exp(-dt*28),12*dt/(d||1));this.grab.cursor.setNextKinematicTranslation({x:p.x+dx*f,y:p.y+dy*f,z:0});}
+  if(this.swing){const s=this.swing,p=s.cursor.translation(),dx=s.target[0]-p.x,dy=s.target[1]-p.y,d=Math.hypot(dx,dy),f=Math.min(1-Math.exp(-dt*32),14*dt/(d||1)),vx=dx*f/dt,vy=dy*f/dt;
+   s.cursor.setNextKinematicTranslation({x:p.x+dx*f,y:p.y+dy*f,z:0});
+   const target=s.entity.asset==='mallet'?clamp(-vx*.075,-1.2,1.2):Math.hypot(vx,vy)>1?Math.atan2(vy,vx)-Math.PI/2:s.angle;
+   s.angle+=angleDelta(target-s.angle)*(1-Math.exp(-dt*12));const q=s.entity.body.rotation(),angle=2*Math.atan2(q.z,q.w),inertia=s.entity.body.principalInertia().z;
+   s.entity.body.applyTorqueImpulse({x:0,y:0,z:clamp(angleDelta(s.angle-angle)*65-s.entity.body.angvel().z*12,-80,80)*inertia*dt},true);
+  }
   for(const machine of [...this.entities]){
    const behavior=machine.tool?.behavior;if(!behavior)continue;
    if(behavior==='explosive'){machine.fuse-=dt;if(machine.fuse<=0){this.blast(machine);continue;}}
@@ -135,6 +160,7 @@ export class Simulation {
    }
   }
   this.world.step(this.events);
+  if(this.swing)this.world.contactPairsWith(this.swing.entity.collider,other=>{if(this.byCollider.get(other.handle)?.part){this.damage.quiet=0;this.needsRecoveryAnchor=true;}});
   this.updateSupport();
   let impact:{entity:Entity;impulse:number;direction:Vec;point:Vec;key:string}|undefined;
   this.events.drainContactForceEvents(event=>{
@@ -161,13 +187,13 @@ export class Simulation {
   }
   for(const [key,time]of this.contacts)if(time<this.elapsed)this.contacts.delete(key);
  }
- resetWassie(){this.release();for(const e of [...this.entities])if(e.part)this.remove(e);this.contacts.clear();this.impactCooldown=0;this.needsRecoveryAnchor=false;this.recoveryX=0;this.airborneTime=0;this.supportUntil=0;this.supportY=0;this.lastDamageSequence=0;this.damage.reset();this.damage.quiet=6;this.createWassie();}
- resetRoom(){this.release();for(const e of [...this.entities])this.remove(e);this.contacts.clear();this.impactCooldown=0;this.needsRecoveryAnchor=false;this.recoveryX=0;this.airborneTime=0;this.supportUntil=0;this.supportY=0;this.lastDamageSequence=0;this.score=new Score();this.damage.reset();this.damage.quiet=6;this.elapsed=0;this.interacted=false;this.createWassie();}
- save():Setup{return {version:1,props:this.entities.filter(e=>!e.part).map(e=>({asset:e.asset,x:e.body.translation().x,y:e.body.translation().y,angle:2*Math.atan2(e.body.rotation().z,e.body.rotation().w)}))};}
+ resetWassie(){this.endSwing();this.release();this.recoveryTime=0;for(const e of [...this.entities])if(e.part)this.remove(e);this.contacts.clear();this.impactCooldown=0;this.needsRecoveryAnchor=false;this.recoveryX=0;this.airborneTime=0;this.supportUntil=0;this.supportY=0;this.lastDamageSequence=0;this.damage.reset();this.damage.quiet=6;this.createWassie();}
+ resetRoom(){this.endSwing();this.release();this.recoveryTime=0;for(const e of [...this.entities])this.remove(e);this.contacts.clear();this.impactCooldown=0;this.needsRecoveryAnchor=false;this.recoveryX=0;this.airborneTime=0;this.supportUntil=0;this.supportY=0;this.lastDamageSequence=0;this.score=new Score();this.damage.reset();this.damage.quiet=6;this.elapsed=0;this.interacted=false;this.createWassie();}
+ save():Setup{return {version:1,props:this.entities.filter(e=>!e.part&&!e.held).map(e=>({asset:e.asset,x:e.body.translation().x,y:e.body.translation().y,angle:2*Math.atan2(e.body.rotation().z,e.body.rotation().w)}))};}
  load(value:unknown){
   const s=value as Setup;if(!s||s.version!==1||!Array.isArray(s.props)||s.props.length>MAX_PROPS||s.props.some(p=>!p||!toolById(p.asset)||![p.x,p.y,p.angle].every(Number.isFinite)))throw Error('This setup is invalid or belongs to a different version.');
   this.resetRoom();for(const p of s.props){const e=this.spawn(p.asset,p.x,p.y)!;e.body.setRotation({x:0,y:0,z:Math.sin(p.angle/2),w:Math.cos(p.angle/2)},true);}
  }
- dispose(){this.release();this.events.free();this.world.free();}
+ dispose(){this.endSwing();this.release();this.events.free();this.world.free();}
 }
 export async function initPhysics(){await RAPIER.init();}

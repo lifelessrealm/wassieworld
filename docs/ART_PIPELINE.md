@@ -39,3 +39,11 @@ Before upgrading an asset to final: check front/side/rear silhouettes, crescent 
 ## Marketing
 
 `assets/marketing/wassieworld-poster.png` is AI-generated promotional concept art using the original reference. It is labeled **IN DEVELOPMENT** and is not represented as a gameplay screenshot. The built-in image-generation tool was used; the prompt is preserved in `assets/marketing/PROMPT.md`.
+
+## Rounded turnaround refinement
+
+The head is 1.48m deep and torso 1.12m deep within the existing source-pixel scale. Both envelopes now curve across the silhouette instead of keeping a flat front cap. The crown tapers into a deeper cranium; a lower neck shift and torso taper give the profile more mass. Character cross-sections sample 64 depth texels. A thin closed rim retains occupied source columns at the silhouette.
+
+The rebake fills continuous green torso skin underneath the traced arm masks. Arm envelopes follow the underlying torso surface with a small overlap, so rotation no longer opens a gap between the chest and floating arm panels. The source arm ink belongs to the independently moving arms. Color/normal/side-material atlases are reproducible through the exporter.
+
+Front-facing artwork remains reference-aligned. At oblique angles, painted silhouette ink and antialiasing near the rim blend into the appropriate skin/eye/lip/foot material; this prevents a stretched black/white stripe on curved surfaces. The frontal material treatment gives way to volume lighting at side/rear angles. This is a material treatment on one closed 3D volume, not a separate side sprite.
