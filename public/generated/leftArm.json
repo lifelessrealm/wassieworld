@@ -1,0 +1,29 @@
+{
+  "id": "leftArm",
+  "size": [
+    0.39814814814814814,
+    1.5277777777777777,
+    0.28
+  ],
+  "layers": 165,
+  "resolution": 43,
+  "depthResolution": 16,
+  "tileSize": [
+    43,
+    16
+  ],
+  "columns": 8,
+  "rows": 21,
+  "spacing": 0.009259259259259259,
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "axis": "Y",
+  "filter": "nearest",
+  "source": "src/assets/volumes.ts#leftArm",
+  "occupiedVoxels": 69730,
+  "colorAtlas": "leftArm-color.png",
+  "normalAtlas": "leftArm-normal.png"
+}

@@ -1,89 +1,5 @@
 [
   {
-    "id": "torso",
-    "size": [
-      1.34,
-      1.86,
-      0.7
-    ],
-    "layers": 80,
-    "resolution": 64,
-    "columns": 8,
-    "rows": 10,
-    "spacing": 0.02325,
-    "pivot": [
-      0,
-      0,
-      0
-    ],
-    "axis": "Y",
-    "filter": "nearest",
-    "source": "src/assets/volumes.ts#torso"
-  },
-  {
-    "id": "head",
-    "size": [
-      1.58,
-      1.32,
-      1.02
-    ],
-    "layers": 64,
-    "resolution": 64,
-    "columns": 8,
-    "rows": 8,
-    "spacing": 0.020625,
-    "pivot": [
-      0,
-      0,
-      0
-    ],
-    "axis": "Y",
-    "filter": "nearest",
-    "source": "src/assets/volumes.ts#head"
-  },
-  {
-    "id": "arm",
-    "size": [
-      0.26,
-      1.25,
-      0.32
-    ],
-    "layers": 48,
-    "resolution": 32,
-    "columns": 8,
-    "rows": 6,
-    "spacing": 0.026041666666666668,
-    "pivot": [
-      0,
-      0,
-      0
-    ],
-    "axis": "Y",
-    "filter": "nearest",
-    "source": "src/assets/volumes.ts#arm"
-  },
-  {
-    "id": "foot",
-    "size": [
-      0.46,
-      0.38,
-      0.68
-    ],
-    "layers": 24,
-    "resolution": 48,
-    "columns": 8,
-    "rows": 3,
-    "spacing": 0.015833333333333335,
-    "pivot": [
-      0,
-      0,
-      0
-    ],
-    "axis": "Y",
-    "filter": "nearest",
-    "source": "src/assets/volumes.ts#foot"
-  },
-  {
     "id": "mallet",
     "size": [
       1.2,
@@ -92,6 +8,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.03125,
@@ -113,6 +34,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.021875000000000002,
@@ -134,6 +60,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.01875,
@@ -155,6 +86,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.020833333333333332,
@@ -176,6 +112,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.02125,
@@ -197,6 +138,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.03125,
@@ -218,6 +164,11 @@
     ],
     "layers": 32,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 4,
     "spacing": 0.02,
@@ -239,6 +190,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.0375,
@@ -260,6 +216,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.02291666666666667,
@@ -281,6 +242,11 @@
     ],
     "layers": 48,
     "resolution": 48,
+    "depthResolution": 48,
+    "tileSize": [
+      48,
+      48
+    ],
     "columns": 8,
     "rows": 6,
     "spacing": 0.029166666666666664,
@@ -294,17 +260,152 @@
     "source": "src/assets/volumes.ts#tesla"
   },
   {
+    "id": "torso",
+    "size": [
+      1.5,
+      1.9351851851851851,
+      0.34
+    ],
+    "layers": 209,
+    "resolution": 162,
+    "depthResolution": 16,
+    "tileSize": [
+      162,
+      16
+    ],
+    "columns": 8,
+    "rows": 27,
+    "spacing": 0.009259259259259259,
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "axis": "Y",
+    "filter": "nearest",
+    "source": "src/assets/volumes.ts#torso"
+  },
+  {
+    "id": "head",
+    "size": [
+      1.6759259259259258,
+      1.3888888888888888,
+      0.46
+    ],
+    "layers": 150,
+    "resolution": 181,
+    "depthResolution": 16,
+    "tileSize": [
+      181,
+      16
+    ],
+    "columns": 8,
+    "rows": 19,
+    "spacing": 0.009259259259259259,
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "axis": "Y",
+    "filter": "nearest",
+    "source": "src/assets/volumes.ts#head"
+  },
+  {
+    "id": "leftArm",
+    "size": [
+      0.39814814814814814,
+      1.5277777777777777,
+      0.28
+    ],
+    "layers": 165,
+    "resolution": 43,
+    "depthResolution": 16,
+    "tileSize": [
+      43,
+      16
+    ],
+    "columns": 8,
+    "rows": 21,
+    "spacing": 0.009259259259259259,
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "axis": "Y",
+    "filter": "nearest",
+    "source": "src/assets/volumes.ts#leftArm"
+  },
+  {
+    "id": "rightArm",
+    "size": [
+      0.2222222222222222,
+      1.4351851851851851,
+      0.28
+    ],
+    "layers": 155,
+    "resolution": 24,
+    "depthResolution": 16,
+    "tileSize": [
+      24,
+      16
+    ],
+    "columns": 8,
+    "rows": 20,
+    "spacing": 0.009259259259259259,
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "axis": "Y",
+    "filter": "nearest",
+    "source": "src/assets/volumes.ts#rightArm"
+  },
+  {
+    "id": "foot",
+    "size": [
+      0.48148148148148145,
+      0.4351851851851852,
+      0.4
+    ],
+    "layers": 47,
+    "resolution": 52,
+    "depthResolution": 16,
+    "tileSize": [
+      52,
+      16
+    ],
+    "columns": 8,
+    "rows": 6,
+    "spacing": 0.009259259259259259,
+    "pivot": [
+      0,
+      0,
+      0
+    ],
+    "axis": "Y",
+    "filter": "nearest",
+    "source": "src/assets/volumes.ts#foot"
+  },
+  {
     "id": "rightFoot",
     "size": [
-      0.64,
-      0.35,
-      0.68
+      0.7407407407407407,
+      0.37037037037037035,
+      0.4
     ],
-    "layers": 24,
-    "resolution": 48,
+    "layers": 40,
+    "resolution": 80,
+    "depthResolution": 16,
+    "tileSize": [
+      80,
+      16
+    ],
     "columns": 8,
-    "rows": 3,
-    "spacing": 0.014583333333333332,
+    "rows": 5,
+    "spacing": 0.009259259259259259,
     "pivot": [
       0,
       0,

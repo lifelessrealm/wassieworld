@@ -6,29 +6,48 @@
       "id": "wassie-character-assets-head",
       "name": "Head",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#head",
+      "dimensions": [
+        1.6759259259259258,
+        1.3888888888888888,
+        0.46
+      ],
+      "slices": 150,
+      "resolution": 181,
+      "physics": {
+        "mass": 1.15,
+        "shape": "rounded-cuboid",
+        "jointLimits": [
+          -0.55,
+          0.55
+        ]
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-upper-torso",
       "name": "Upper torso",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#torso",
+      "dimensions": [
+        1.5,
+        1.9351851851851851,
+        0.34
+      ],
+      "slices": 209,
+      "resolution": 162,
+      "physics": {
+        "mass": 2.5,
+        "shape": "rounded-cuboid",
+        "jointLimits": null
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-lower-torso",
@@ -48,29 +67,51 @@
       "id": "wassie-character-assets-left-upper-arm",
       "name": "Left upper arm",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#leftArm",
+      "dimensions": [
+        0.39814814814814814,
+        1.5277777777777777,
+        0.28
+      ],
+      "slices": 165,
+      "resolution": 43,
+      "physics": {
+        "mass": 0.22,
+        "shape": "rounded-cuboid",
+        "jointLimits": [
+          -0.7,
+          0.55
+        ]
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-right-upper-arm",
       "name": "Right upper arm",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#rightArm",
+      "dimensions": [
+        0.2222222222222222,
+        1.4351851851851851,
+        0.28
+      ],
+      "slices": 155,
+      "resolution": 24,
+      "physics": {
+        "mass": 0.22,
+        "shape": "rounded-cuboid",
+        "jointLimits": [
+          -0.55,
+          0.7
+        ]
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-left-forearm",
@@ -188,29 +229,51 @@
       "id": "wassie-character-assets-left-foot",
       "name": "Left foot",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#foot",
+      "dimensions": [
+        0.48148148148148145,
+        0.4351851851851852,
+        0.4
+      ],
+      "slices": 47,
+      "resolution": 52,
+      "physics": {
+        "mass": 0.38,
+        "shape": "rounded-cuboid",
+        "jointLimits": [
+          -0.35,
+          0.45
+        ]
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-right-foot",
       "name": "Right foot",
       "category": "Wassie character assets",
-      "status": "planned",
-      "source": null,
-      "dimensions": null,
-      "slices": null,
-      "resolution": null,
-      "physics": null,
-      "qa": "not-produced",
+      "status": "initial-implementation",
+      "source": "src/assets/volumes.ts#rightFoot",
+      "dimensions": [
+        0.7407407407407407,
+        0.37037037037037035,
+        0.4
+      ],
+      "slices": 40,
+      "resolution": 80,
+      "physics": {
+        "mass": 0.38,
+        "shape": "rounded-cuboid",
+        "jointLimits": [
+          -0.45,
+          0.35
+        ]
+      },
+      "qa": "canonical-front-comparison; articulated-physics-tests; inferred-side-rear-art-pending",
       "dependencies": [],
-      "productionNotes": "Requires authored coherent source volume, collider, audio profile, behavior, lighting and in-engine QA before registration."
+      "productionNotes": "Reference-aligned part of the six-body puppet. Arm assets currently represent the whole arm; finer articulation remains planned."
     },
     {
       "id": "wassie-character-assets-eyes",

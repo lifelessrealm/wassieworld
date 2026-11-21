@@ -1,15 +1,20 @@
 {
   "id": "head",
   "size": [
-    1.58,
-    1.32,
-    1.02
+    1.6759259259259258,
+    1.3888888888888888,
+    0.46
   ],
-  "layers": 64,
-  "resolution": 64,
+  "layers": 150,
+  "resolution": 181,
+  "depthResolution": 16,
+  "tileSize": [
+    181,
+    16
+  ],
   "columns": 8,
-  "rows": 8,
-  "spacing": 0.020625,
+  "rows": 19,
+  "spacing": 0.009259259259259259,
   "pivot": [
     0,
     0,
@@ -18,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#head",
-  "occupiedVoxels": 158348,
+  "occupiedVoxels": 349690,
   "colorAtlas": "head-color.png",
   "normalAtlas": "head-normal.png"
 }

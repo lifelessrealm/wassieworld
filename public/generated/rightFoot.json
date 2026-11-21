@@ -1,15 +1,20 @@
 {
   "id": "rightFoot",
   "size": [
-    0.64,
-    0.35,
-    0.68
+    0.7407407407407407,
+    0.37037037037037035,
+    0.4
   ],
-  "layers": 24,
-  "resolution": 48,
+  "layers": 40,
+  "resolution": 80,
+  "depthResolution": 16,
+  "tileSize": [
+    80,
+    16
+  ],
   "columns": 8,
-  "rows": 3,
-  "spacing": 0.014583333333333332,
+  "rows": 5,
+  "spacing": 0.009259259259259259,
   "pivot": [
     0,
     0,
@@ -18,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#rightFoot",
-  "occupiedVoxels": 21416,
+  "occupiedVoxels": 27228,
   "colorAtlas": "rightFoot-color.png",
   "normalAtlas": "rightFoot-normal.png"
 }

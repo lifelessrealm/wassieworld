@@ -17,13 +17,14 @@ Open the local URL printed by Vite. Select an object, click inside the chamber t
 
 ## Implemented
 
-- Six-body articulated Wassie, joints, CCD, a fixed 120 Hz Rapier simulation, capped throwing velocity, grabbing and recovery pose blending.
+- Six-body articulated Wassie with limited revolute joints, CCD, fixed 120 Hz physics, a damped spring grab, capped throwing velocity and gradual recovery.
 - Ten functional tools: mallet, glove, anvil, crate, bomb, rocket, launch pad, fan, cryo capsule, Tesla coil. Shared impulses, timed explosions, chain reactions, fields and freeze/electric combinations.
 - Reference-assisted coherent source volumes, horizontal color/normal cross-sections, exported PNG atlases and metadata, exposed-texel extrusion, instanced rendering, volume-derived normals, nearest-neighbor source sampling, contact shadows.
-- Layered bruising, soot, tears, stars, freezing, electrical effects, flattening and recovery bandages. Automatic damage recovery.
+- Reference-aligned proportions and traced arms, preserved facial art, and a shallow coherent volume with beveled edges. The neutral front reconstruction has 98.7% foreground overlap with the supplied image at the recorded comparison resolution; inferred side/rear views remain unfinished.
+- Local fading bruises, impact blinking, soot, tears, stars, frost, electrical effects, continuous squash/recoil and recovery bandages. One landing/explosion produces one reaction episode.
 - Scoring with bounded repeat rewards and combo expiry. Real frame/draw/body counters.
 - Searchable categorized catalog, pause, time scaling, gravity toggle, deletion, resets, local setup save/load, screenshot download, synthesized impact audio, reduced motion and three resolution presets.
-- Asset Laboratory with rotating volumes and partial slice reconstruction; retained original reference image.
+- Character studio with assembled-rig/reference comparison, manual views, turntable and combined damage previews. Individual volumes retain partial slice reconstruction.
 
 ## Validate and regenerate
 
@@ -36,7 +37,9 @@ npm run test:e2e
 
 Browser tests use installed Google Chrome. In CI, Playwright installs it with `npx playwright install chrome`. Setups are versioned prop placements in localStorage, not simulation checkpoints or recordings. Loading resets velocities, fuses, scoring and Wassie.
 
-The asset exporter produces color and normal atlases plus metadata for 15 source volumes, and indexes 386 named requirements from the supplied master plan. Planned assets are explicitly marked `planned`; they are not represented as playable content. To rebake canonical pixel profiles after an intentional reference/crop change: `node scripts/bake-reference.mjs`, then `npm run assets`.
+The asset exporter produces color and normal atlases plus metadata for 16 source volumes, and indexes 386 named requirements from the supplied master plan. Planned assets are explicitly marked `planned`; they are not represented as playable content. To rebake canonical pixel profiles after an intentional reference/crop change: `node scripts/bake-reference.mjs`, then `npm run assets`.
+
+With the dev server running, `node scripts/compare-reference.mjs` checks the neutral front render against the original and saves a side-by-side image plus measured fidelity report. `node scripts/character-qa.mjs` captures the assembled character and damage combinations for visual review.
 
 ## Production build and hosting
 

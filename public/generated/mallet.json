@@ -7,6 +7,11 @@
   ],
   "layers": 48,
   "resolution": 48,
+  "depthResolution": 48,
+  "tileSize": [
+    48,
+    48
+  ],
   "columns": 8,
   "rows": 6,
   "spacing": 0.03125,

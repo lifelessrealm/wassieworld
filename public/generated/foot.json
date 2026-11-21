@@ -1,15 +1,20 @@
 {
   "id": "foot",
   "size": [
-    0.46,
-    0.38,
-    0.68
+    0.48148148148148145,
+    0.4351851851851852,
+    0.4
   ],
-  "layers": 24,
-  "resolution": 48,
+  "layers": 47,
+  "resolution": 52,
+  "depthResolution": 16,
+  "tileSize": [
+    52,
+    16
+  ],
   "columns": 8,
-  "rows": 3,
-  "spacing": 0.015833333333333335,
+  "rows": 6,
+  "spacing": 0.009259259259259259,
   "pivot": [
     0,
     0,
@@ -18,7 +23,7 @@
   "axis": "Y",
   "filter": "nearest",
   "source": "src/assets/volumes.ts#foot",
-  "occupiedVoxels": 27798,
+  "occupiedVoxels": 25914,
   "colorAtlas": "foot-color.png",
   "normalAtlas": "foot-normal.png"
 }

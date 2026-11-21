@@ -1,47 +1,64 @@
-# Verification — 2026-11-21
+# Verification — character fidelity and reactions, 2026-11-21
 
-Story: select a tool or body part in the browser → update the client-side Rapier world → receive measured physical events → render motion, damage, audio and score → optionally save placements to localStorage and load a fresh experiment.
+Story: the player sees the canonical Wassie proportions → grabs a physical part through a spring constraint → throws or hits the articulated rig → one measured collision episode produces layered facial/body reactions → damage fades and the rig recovers smoothly. The character studio exposes the same art and damage system beside the unchanged original image. The existing ten-tool catalog is unchanged.
 
-This is a local browser simulation. There is no API/database boundary or secret configuration in this build.
-
-## Automated results
+## Local checks
 
 | Check | Observed result |
 | --- | --- |
-| `npm test` | 12 passing system tests |
-| `npm run assets` | 15 volume atlases/normal maps and metadata exported; 386 production requirements indexed |
+| `npm test` | 23 passing system tests |
+| `npm run assets` | 16 coherent volumes exported; 386 production requirements indexed |
 | `npm run build` | TypeScript and production Vite build passed |
-| `node scripts/production-smoke.mjs` | Production browser loaded, ten tools rendered, bomb scored, no debug API and no browser errors |
-| `npm run test:e2e` | 5 passing Chrome browser tests |
-| Browser startup | No page or console errors in the tested idle flow |
+| `npm run test:e2e` | Six passing Chrome browser tests |
+| `node scripts/production-smoke.mjs` | Production browser loads, ten tools render, bomb scores, no development debug API or browser errors |
+| `node scripts/compare-reference.mjs` | Neutral front reconstruction exceeds the recorded image comparison gate |
+| `node scripts/character-qa.mjs` | Captured gameplay, front/quarter/rear and heavy/combined/recovery states without console or page errors |
 
-System tests cover changing real cross-sections, occupancy/normals, valid tool registrations, damage decay and effect expiry, bounded repeat scoring, 20 seconds of stable articulated physics, grab/release momentum, bomb force and chain reactions, freeze/electric interactions, fans/launch pads, atomic setup validation, repeated reset resource counts, object limits, and a 30-prop mixed simulation stress case.
+The simulation is local to the browser; there is no API/database or secret configuration boundary in this build.
 
-Browser tests cover actual pointer placement and ragdoll grabbing/throwing, pause/time scale, search, bomb explosion/scoring, save/clear/load, reset, PNG downloads, laboratory source selection and slicing, and a touch-emulated 390×844 layout with placement, touch grabbing/release and settings. Desktop screenshot viewport: 1440×1000. No horizontal overflow in the tested mobile layout. Narrow screens frame a closer central portion of the chamber to keep Wassie easier to touch.
+## Canonical image comparison
 
-## Rendering observations
+The script isolates the actual assembled Three.js source-volume reconstruction and renders it orthographically on white. It compares that output with the original source crop at **398×782**, using the same source-pixel/world mapping for every part.
 
-Visual inspection caught initial tipping at rest and gaps between thin sprite planes during tumbling. The implemented recovery pose support and closed exposed-texel geometry address those observed defects. An idle assertion now verifies the head remains upright and the score remains zero without input. Original-source reference profiling replaced the initial ellipsoid face approximation. Final art fidelity is still a separate incomplete quality gate.
+- Foreground intersection-over-union: **0.9871945**.
+- Mean absolute RGB channel error over shared foreground: **5.55896 / 255**.
+- Regression thresholds: foreground IoU ≥ **0.975**, mean channel error ≤ **12 / 255**.
+- Original source image remains unchanged. Front art is sampled from it; the character is still reconstructed as closed horizontal source-volume slices.
 
-Browser tests force SwiftShader for repeatable headless WebGL coverage, measuring roughly 21–22 FPS in the initial scene. This software result does not represent the PC's hardware GPU.
+These measurements cover the supplied neutral front view. They do not certify pixel identity under every camera/light/deformation, or prove that inferred side/rear art matches an unavailable turnaround. Foreground excludes near-white pixels, so this is a foreground overlap metric rather than a filled silhouette or perceptual identity score. Review the saved side-by-side image as well as the numbers.
 
-An additional Chrome run used the real **NVIDIA GeForce RTX 3080 Ti**, ANGLE Direct3D11, at **1440×1000**:
+## Character and physics regressions
+
+New coverage checks one reference scale across six parts; canonical eye/lip/brow/crescent colors; relative angle limits under repeated torque; planar motion; a long moving spring grab; delayed recovery while held; bounded release speed; landing reaction spacing and return to stance; no idle damage/score after placing an unrelated prop; one damage event per explosion; bounded local bruise marks and fading; continuous deformation at different step rates; zero-gravity behavior; and reset cleanup of joints, overlays and recovery anchors.
+
+Existing coverage retains cross-section occupancy and normalized normals, physical tool registrations, layered status expiry, bounded combo scoring, stable 20-second articulation, throwing momentum, bomb chain reactions, elemental combinations, machine impulses, atomic save validation, repeated resets, prop budgets and mixed-tool stress.
+
+The unstable intermediate joint implementation was found by actual simulation runs. Both the child body and revolute joint were constraining the same non-planar axes. The final implementation gives that responsibility to the joint and locks the overall plane at the torso. Limited-joint torque tests and the mixed simulation now pass. Idle creep was removed by capturing a stable recovery anchor.
+
+## Browser and visual checks
+
+Tests exercise mouse placement and grab/throw, pause/slow motion, catalog search, bomb scoring, local save/clear/load, reset, PNG download, partial slices, assembled character/reference comparison, multiple view selection, turntable, combined damage preview and neutral reset. Mobile coverage is touch-emulated Chrome at 390×844, including a real CDP touch start/move/end sequence. No horizontal overflow was observed.
+
+Visual inspection verifies the removed face wrapping, more faithful tucked-arm silhouettes, reduced neck step, visible pointed feet in the neutral studio backdrop, clipping of damage to the character silhouette, and combined frost/soot/shock layers. Side/rear volume shape and animated seam transitions still need artistic review. Software-rendered browser tests verify behavior and rendering compatibility; they do not certify mobile hardware performance.
+
+## Hardware sample
+
+Chrome used **NVIDIA GeForce RTX 3080 Ti**, ANGLE Direct3D11, viewport **1440×1000**:
 
 | Scene | FPS sampled | Draws | Triangles | Rigid bodies | Physics time sampled |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Idle chamber | 144 | 18 | 152,150 | 6 | 0.2 ms |
-| 40 mixed crate/mallet/anvil/glove props | 142 | 98 | 1,020,670 | 46 | 0.4 ms |
+| Idle refined character | 144 | 19 | 304,164 | 6 | 0.2 ms |
+| 40 mixed crate/mallet/anvil/glove props | 144 | 99 | 1,172,684 | 46 | 0.4 ms |
 
-The capped scene retained finite body coordinates. These are short local samples, not percentile benchmarks, sustained thermal tests or proof of performance on lower-end hardware. Actual Android/iOS devices, Safari and Firefox have not been tested. Touch emulation is not physical-device certification.
+Body coordinates remained finite. These are short local samples, not percentile benchmarks or sustained/device-wide certification. Physical Android/iOS devices, Safari and Firefox remain untested.
 
-## Build/runtime limitations
+## Known limits
 
-- Rapier's embedded WASM chunk is ~830 KB gzipped and triggers Vite's uncompressed chunk-size warning. No build errors.
-- Rapier emits an upstream initialization-parameter deprecation warning from its compatibility wrapper; initialization and tested simulation work.
-- Production static output is `dist/`. No production Vercel deployment has been performed.
-- GitHub Actions run `44931130735` failed before receiving a runner or executing steps. Its annotation is: **“The job was not started because your account is locked due to a billing issue.”** Local validation passed; hosted CI requires the repository owner's GitHub billing issue to be resolved. This is an account-level blocker rather than an observed application test failure.
-- Setup saves store prop placements only, with fresh velocities/fuses and scoring on load.
-- Inferred side/rear character geometry, seams, slice appearance and full material profiles need further art work.
-- No replay, recording, online leaderboard, challenges or bulk-content completion is claimed.
+- Side/rear forms are inferred shallow volumes. Final all-angle character approval remains open.
+- Character source data adds an application chunk of about 88 KB gzipped; Rapier's compatibility/WASM chunk is about 830 KB gzipped. Vite reports uncompressed chunk-size warnings, not build errors.
+- Rapier emits an upstream compatibility initialization warning; tested initialization and physics work.
+- The production output is `dist/`; no Vercel deployment was performed.
+- Earlier GitHub Actions run `44931130735` never received a runner. Its annotation was: **“The job was not started because your account is locked due to a billing issue.”** Local checks passed. Hosted CI requires resolving that account-level issue; no hosted pass is claimed.
+- Saves remain prop placements, not simulation checkpoints. No new tools, replay, challenges, leaderboard or content expansion is claimed.
 
-Screenshots are generated under `test-results/` and copied to the deliverable package. `scripts/profile.mjs` reproduces the short hardware sample against the local dev server. `scripts/inspect.mjs` captures the software-rendered startup state and errors.
+Evidence scripts and screenshots are under `scripts/` and `test-results/character/`. Source and production archives, the comparison image, and this report are copied into the local deliverable outputs.

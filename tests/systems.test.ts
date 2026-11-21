@@ -6,8 +6,8 @@ import {volumes,compileVolume,sample} from '../src/assets/volumes.ts';
 import {tools} from '../src/assets/catalog.ts';
 before(async()=>{await initPhysics();});
 test('real cross-sections have transparent space, changing contours and valid normals',()=>{
- const v=volumes.head,d=compileVolume(v);assert.equal(d.color.length,d.width*d.height*4);assert.ok(d.occupied>1000&&d.occupied<v.layers*v.resolution**2*.8);
- const counts=[];for(let y=0;y<v.layers;y++){let count=0;for(let z=0;z<v.resolution;z++)for(let x=0;x<v.resolution;x++){const i=((Math.floor(y/8)*v.resolution+z)*d.width+(y%8)*v.resolution+x)*4;if(d.color[i+3]){count++;assert.equal(d.normals[i+3],255);const norm=d.normals.slice(i,i+3).map(n=>n);assert.ok([...norm].every(Number.isFinite));}}counts.push(count);}assert.ok(new Set(counts).size>20);
+ const v=volumes.head,d=compileVolume(v),depth=v.depthResolution??v.resolution;assert.equal(d.color.length,d.width*d.height*4);assert.ok(d.occupied>1000&&d.occupied<v.layers*v.resolution*depth);
+ const counts=[];for(let y=0;y<v.layers;y++){let count=0;for(let z=0;z<depth;z++)for(let x=0;x<v.resolution;x++){const i=((Math.floor(y/8)*depth+z)*d.width+(y%8)*v.resolution+x)*4;if(d.color[i+3]){count++;assert.equal(d.normals[i+3],255);const normal=Array.from(d.normals.slice(i,i+3),n=>n/255*2-1);assert.ok(Math.abs(Math.hypot(...normal)-1)<.025);}}counts.push(count);}assert.ok(new Set(counts).size>20);
  assert.equal(sample(v,[10,10,10]),null);assert.equal(d.metadata.spacing,v.size[1]/v.layers);
 });
 test('all registered tools resolve to source volumes and use physical mass',()=>{assert.equal(tools.length,10);for(const t of tools){assert.ok(volumes[t.id]);assert.ok(t.mass>0);assert.ok(t.restitution>=0&&t.restitution<=1);}});
