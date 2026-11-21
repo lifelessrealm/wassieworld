@@ -1,56 +1,11 @@
 # WassieWorld
 
-A very unfortunate browser physics sandbox. This is the first playable development build, based on the recovered **Sprite Stacking Character** conversation and its canonical character image and master plan.
+A very unfortunate browser physics sandbox.
 
-## Play locally
+The first playable build, source code, original character reference, development plan and test documentation are on the dedicated development branch:
 
-Requires **Node.js 24+**, npm, and a browser with WebGL 2.
+**[Open codex/wassieworld-foundation](https://github.com/lifelessrealm/wassieworld/tree/codex/wassieworld-foundation)**
 
-```sh
-npm ci
-npm run dev
-```
+To run that build, clone the repository, check out `codex/wassieworld-foundation`, then follow its README. Requires Node.js 24+ and a browser with WebGL 2.
 
-Open the local URL printed by Vite. Select an object, click inside the chamber to deploy it, then use **Grab** to drag a body part or prop. Release while moving to throw. Touch input is supported.
-
-**G** grab · **1–0** tools · **Space** pause · **T** slow motion · **R** reset Wassie · **Shift+R** clear room · **L** laboratory · **Esc** release · scroll to zoom.
-
-## Implemented
-
-- Six-body articulated Wassie, joints, CCD, a fixed 120 Hz Rapier simulation, capped throwing velocity, grabbing and recovery pose blending.
-- Ten functional tools: mallet, glove, anvil, crate, bomb, rocket, launch pad, fan, cryo capsule, Tesla coil. Shared impulses, timed explosions, chain reactions, fields and freeze/electric combinations.
-- Reference-assisted coherent source volumes, horizontal color/normal cross-sections, exported PNG atlases and metadata, exposed-texel extrusion, instanced rendering, volume-derived normals, nearest-neighbor source sampling, contact shadows.
-- Layered bruising, soot, tears, stars, freezing, electrical effects, flattening and recovery bandages. Automatic damage recovery.
-- Scoring with bounded repeat rewards and combo expiry. Real frame/draw/body counters.
-- Searchable categorized catalog, pause, time scaling, gravity toggle, deletion, resets, local setup save/load, screenshot download, synthesized impact audio, reduced motion and three resolution presets.
-- Asset Laboratory with rotating volumes and partial slice reconstruction; retained original reference image.
-
-## Validate and regenerate
-
-```sh
-npm test
-npm run assets
-npm run build
-npm run test:e2e
-```
-
-Browser tests use installed Google Chrome. In CI, Playwright installs it with `npx playwright install chrome`. Setups are versioned prop placements in localStorage, not simulation checkpoints or recordings. Loading resets velocities, fuses, scoring and Wassie.
-
-The asset exporter produces color and normal atlases plus metadata for 15 source volumes, and indexes 386 named requirements from the supplied master plan. Planned assets are explicitly marked `planned`; they are not represented as playable content. To rebake canonical pixel profiles after an intentional reference/crop change: `node scripts/bake-reference.mjs`, then `npm run assets`.
-
-## Production build and hosting
-
-`npm run build` outputs `dist/`. This is a static Vite application, ready for Vercel's **Vite** preset (`npm run build`, output directory `dist`). No secrets, server, wallet, database or paid service is required. Deployment has not been performed as part of this build. `npm run preview` serves the production build locally.
-
-The physics vendor chunk embeds Rapier WASM and is approximately 830 KB gzipped; Vite warns about its uncompressed size. This is recorded rather than hidden. Font loading uses Google Fonts with local system fallbacks; game simulation needs no external network after loading.
-
-## Development documentation
-
-- [Master plan supplied in the original conversation](docs/MASTER_PLAN.md)
-- [Architecture and extension points](docs/ARCHITECTURE.md)
-- [Character fidelity and asset pipeline](docs/ART_PIPELINE.md)
-- [Honest implementation status and next milestones](docs/STATUS.md)
-- [Verification evidence and limitations](docs/VERIFICATION.md)
-- [Production inventory](assets/production-inventory.json)
-
-This build is an initial playable foundation, **not the completed master-plan release**. See the status document before expanding content.
+Development is in progress. This main branch is a repository landing page.
